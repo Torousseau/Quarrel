@@ -1,5 +1,6 @@
 from django.contrib.auth import authenticate
-from django.template.base import Token
+from django.contrib.auth.models import User
+from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -26,8 +27,9 @@ class LoginView(APIView):
         if user is not None:
             if not user.is_active:
                 return Response({"error": "User is inactive"}, status=403)
-            token, _ = Token.objects.get_or_create(user=user)
-            return Response({"token": token.key}, status=200)
+            user = User.objects.get(username=username)  # Remplacez par l'utilisateur souhaité
+            token, created = Token.objects.get_or_create(user=user)
+            return Response({"token": token.key, "user_id": user.id}, status=200)
         return Response({"error": "Invalid credentials"}, status=401)
 
 

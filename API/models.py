@@ -37,6 +37,11 @@ class ChannelUser(models.Model):
     def __str__(self):
         return f"{self.user.username} in {self.channel.name}"
 
+    @classmethod
+    def get_channels_by_user(cls, user_id):
+        return cls.objects.filter(user_id=user_id).select_related('channel')
+
+
 class Message(models.Model):
     id = models.AutoField(primary_key=True)
 
