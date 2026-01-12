@@ -13,6 +13,7 @@ from API.views import (
     CreateMessageView,
     CreateServerView,
     CreateChannelView,
+    GetChannelsOfServerView,
 )
 
 urlpatterns = [
@@ -29,6 +30,7 @@ urlpatterns = [
     path("api/user/<int:user_id>/channels/", GetChannelsOfUserView.as_view(), name="get_channels_of_user"),
 
     path("api/server/create/", CreateServerView.as_view(), name="create_server"),
+    path("api/server/<int:server_id>/channels/", GetChannelsOfServerView.as_view(), name="get_channels_of_server"),
 
     path("api/channel/<int:channel_id>/users/", GetUsersInChannelView.as_view(), name="get_users_in_channel"),
     path("api/channel/<int:channel_id>/messages/", GetMessagesByChannelView.as_view(), name="get_messages_by_channel"),

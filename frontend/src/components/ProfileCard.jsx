@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import "../assets/style/ProfileCard.css";
+import "../assets/styles/ProfileCard.css";
 
 const ProfileCard = () => {
     const [isEditing, setIsEditing] = useState(false);

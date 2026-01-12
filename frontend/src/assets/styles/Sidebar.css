@@ -42,12 +42,27 @@
     background: rgba(255, 255, 255, 0.05);
     border-radius: 10px;
     cursor: pointer;
-    transition: background 0.2s, transform 0.1s;
+    transition: background 0.3s, transform 0.2s, color 0.2s;
 }
 
 .server-item:hover {
     background: rgba(137, 180, 255, 0.15);
     transform: scale(1.02);
+}
+
+/* ✅ Serveur sélectionné */
+.server-item.selected {
+    background: linear-gradient(135deg, #6c5ce7, #3b82f6);
+    color: white;
+    font-weight: bold;
+    border-left: 4px solid #341f97;
+}
+
+.server-item.selected .server-icon {
+    background: white;
+    color: #6c5ce7;
+    font-weight: bold;
+    transition: background 0.3s, color 0.3s;
 }
 
 .server-icon {
@@ -60,12 +75,15 @@
     justify-content: center;
     font-weight: bold;
     font-size: 1.1rem;
+    color: white;
+    transition: background 0.3s, color 0.3s;
 }
 
 .server-name {
     flex: 1;
     font-size: 1rem;
     color: #f3f4f6;
+    transition: color 0.3s;
 }
 
 .sidebar-profile {
@@ -117,4 +135,18 @@
 
 .logout-button:hover {
     background: #f87171;
+}
+
+/* Scrollbar custom pour sidebar */
+.server-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.server-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.server-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
 }

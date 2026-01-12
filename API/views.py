@@ -132,6 +132,18 @@ class GetServersOfUserView(APIView):
         data = [{"id": su.server.id, "name": su.server.name} for su in servers]
         return Response(data, status=200)
 
+class GetChannelsOfServerView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, server_id):
+        channels = ChannelRepository.get_channels_by_server(server_id)
+        if not channels:
+            return Response({"error": "No channels found for this server"}, status=404)
+
+        channel_data = [{"id": c.id, "name": c.name, "description": c.description} for c in channels]
+        return Response(channel_data, status=200)
+
+
 class GetUsersInChannelView(APIView):
     permission_classes = [IsAuthenticated]
 
