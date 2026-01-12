@@ -30,14 +30,14 @@
 .channel-list {
     display: flex;
     flex-direction: column;
-    height: 100%; /* pour que le flex fonctionne sur toute la hauteur */
+    height: 100%;
     border-right: 1px solid #ddd;
     background: #f4f4f4;
 }
 
 .channels {
-    flex: 1; /* prend tout l’espace disponible au-dessus */
-    overflow-y: auto; /* permet de scroller la liste si elle est longue */
+    flex: 1;
+    overflow-y: auto;
     padding: 10px;
 }
 

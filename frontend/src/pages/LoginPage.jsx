@@ -31,6 +31,7 @@ export default function LoginPage({ onLogin }) {
             console.log(data);
 
             if (onLogin) onLogin(data);
+
             navigate("/");
         } catch (err) {
             setError(err.message);
@@ -80,8 +81,18 @@ export default function LoginPage({ onLogin }) {
                         {loading ? "Connexion..." : "Se connecter"}
                     </button>
                 </form>
+
                 <p className="login-footer">
-                    Pas encore de compte ? <a href="/register">Inscrivez-vous</a>
+                    Pas encore de compte ?{" "}
+                    <a
+                        href="#!"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            navigate("/register");
+                        }}
+                    >
+                        Inscrivez-vous
+                    </a>
                 </p>
             </div>
         </div>

@@ -10,14 +10,7 @@ from API.repositories.channel import ChannelRepository
 from API.repositories.message import MessageRepository
 from API.repositories.user import UserRepository
 
-# ==========================
-# LOGIN
-# ==========================
 class LoginView(APIView):
-    """
-    Handles user login with JWT.
-    """
-
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -53,13 +46,22 @@ class LoginView(APIView):
         }, status=200)
 
 
-# ==========================
-# REGISTER
-# ==========================
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        refresh_token = request.data.get('refresh')
+        if not refresh_token:
+            return Response({"error": "Refresh token required"}, status=400)
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response({"message": "Logged out successfully"}, status=205)
+        except TokenError:
+            return Response({"error": "Invalid token"}, status=400)
+
 class RegisterView(APIView):
-    """
-    Handles user registration.
-    """
+    permission_classes = [AllowAny]
 
     permission_classes = [AllowAny]
 
@@ -102,10 +104,6 @@ class RegisterView(APIView):
             }, status=200)
         return Response({"error": "User registration failed"}, status=400)
 
-
-# ==========================
-# GET USER PROFILE
-# ==========================
 class GetUserProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -123,10 +121,6 @@ class GetUserProfileView(APIView):
             "tag": profile.tag if profile else ""
         }, status=200)
 
-
-# ==========================
-# GET SERVERS OF USER
-# ==========================
 class GetServersOfUserView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -138,10 +132,6 @@ class GetServersOfUserView(APIView):
         data = [{"id": su.server.id, "name": su.server.name} for su in servers]
         return Response(data, status=200)
 
-
-# ==========================
-# GET USERS IN CHANNEL
-# ==========================
 class GetUsersInChannelView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -156,10 +146,6 @@ class GetUsersInChannelView(APIView):
 
         return Response(user_data, status=200)
 
-
-# ==========================
-# GET CHANNELS OF USER IN SERVER
-# ==========================
 class GetChannelsOfUserView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -173,10 +159,6 @@ class GetChannelsOfUserView(APIView):
         channel_data = [{"id": c.id, "name": c.name, "server": c.server.name} for c in channels]
         return Response(channel_data, status=200)
 
-
-# ==========================
-# GET MESSAGES BY CHANNEL
-# ==========================
 class GetMessagesByChannelView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -195,10 +177,6 @@ class GetMessagesByChannelView(APIView):
         ]
         return Response(message_data, status=200)
 
-
-# ==========================
-# CREATE MESSAGE
-# ==========================
 class CreateMessageView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -216,3 +194,46 @@ class CreateMessageView(APIView):
 
         message = MessageRepository.create_message(channel=channel, user=user, content=content)
         return Response({"message": "Message created successfully", "id": message.id}, status=201)
+
+class CreateServerView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        name = request.data.get('name')
+        description = request.data.get('description', '')
+
+        if not name:
+            return Response({"error": "Server name is required"}, status=400)
+
+        server = Server.objects.create(
+            name=name,
+            description=description,
+            owner=request.user
+        )
+
+        ServerUser.objects.create(user=request.user, server=server)
+
+        return Response(
+            {"message": "Server created successfully", "id": server.id},
+            status=201
+        )
+
+class CreateChannelView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        name = request.data.get('name')
+        server_id = request.data.get('server_id')
+        description = request.data.get('description', '')
+
+        if not name or not server_id:
+            return Response({"error": "Channel name and server ID are required"}, status=400)
+
+        try:
+            server = Server.objects.get(id=server_id)
+        except Server.DoesNotExist:
+            return Response({"error": "Server not found"}, status=404)
+
+        channel = Channel.objects.create(name=name, description=description, server=server)
+
+        return Response({"message": "Channel created successfully", "id": channel.id}, status=201)

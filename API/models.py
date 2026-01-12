@@ -1,10 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-
-# ==========================
-# USER PROFILE
-# ==========================
 class UserProfile(models.Model):
     user = models.OneToOneField(
         User,
@@ -23,13 +19,10 @@ class UserProfile(models.Model):
     def __str__(self):
         return f"{self.user.username} profile"
 
-
-# ==========================
-# SERVER
-# ==========================
 class Server(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     owner = models.ForeignKey(
         User,
@@ -42,10 +35,6 @@ class Server(models.Model):
     def __str__(self):
         return self.name
 
-
-# ==========================
-# SERVER MEMBERS
-# ==========================
 class ServerUser(models.Model):
     user = models.ForeignKey(
         User,
@@ -70,10 +59,6 @@ class ServerUser(models.Model):
     def get_servers_by_user(cls, user_id):
         return cls.objects.filter(user_id=user_id).select_related('server')
 
-
-# ==========================
-# CHANNEL
-# ==========================
 class Channel(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True)
@@ -90,10 +75,6 @@ class Channel(models.Model):
     def __str__(self):
         return f"{self.server.name} | #{self.name}"
 
-
-# ==========================
-# MESSAGE
-# ==========================
 class Message(models.Model):
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
