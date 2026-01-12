@@ -1,41 +1,42 @@
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
-from rest_framework.authtoken.models import Token
-from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework_simplejwt.tokens import RefreshToken
 
-from API.models import ChannelUser
+from API.models import UserProfile, ServerUser, Server, Channel, Message
 from API.repositories.channel import ChannelRepository
 from API.repositories.message import MessageRepository
 from API.repositories.user import UserRepository
 
-from API.models import UserProfile
-
-
+# ==========================
+# LOGIN
+# ==========================
 class LoginView(APIView):
     """
-    Handles user login.
+    Handles user login with JWT.
     """
+
+    permission_classes = [AllowAny]
 
     def post(self, request):
         username = request.data.get('username')
         password = request.data.get('password')
 
         user = authenticate(username=username, password=password)
-
-        if user is None:
+        if not user:
             return Response({"error": "Invalid credentials"}, status=401)
-
         if not user.is_active:
             return Response({"error": "User is inactive"}, status=403)
 
-        token, _ = Token.objects.get_or_create(user=user)
-
-        profile = UserProfile.objects.filter(user=user).first()
-        channels = ChannelUser.get_channels_by_user(user.id)
+        refresh = RefreshToken.for_user(user)
+        profile = getattr(user, 'profile', None)
+        servers = ServerUser.get_servers_by_user(user.id)
 
         return Response({
-            "token": token.key,
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
             "user": {
                 "id": user.id,
                 "username": user.username,
@@ -43,37 +44,24 @@ class LoginView(APIView):
                 "bio": profile.bio if profile else "",
                 "tag": profile.tag if profile else "",
             },
-            "channels": [
+            "servers": [
                 {
-                    "id": channel.id,
-                    "name": channel.name
-                } for channel in channels
+                    "id": su.server.id,
+                    "name": su.server.name
+                } for su in servers
             ]
         }, status=200)
 
 
-class LogoutView(APIView):
-    """
-    Handles user logout.
-    """
-
-    def post(self, request):
-        """
-        Handle user logout.
-        """
-        request.user.auth_token.delete()
-        return Response({"message": "Logged out successfully"}, status=200)
-
-
+# ==========================
+# REGISTER
+# ==========================
 class RegisterView(APIView):
     """
     Handles user registration.
     """
 
     def post(self, request):
-        """
-        Handle user registration.
-        """
         username = request.data.get('username')
         email = request.data.get('email')
         password = request.data.get('password')
@@ -87,101 +75,111 @@ class RegisterView(APIView):
             return Response({"error": "Email already exists"}, status=400)
 
         user = UserRepository.create_user(username=username, email=email, password=password)
-
         if user:
             return Response({"message": "User registered successfully"}, status=201)
         return Response({"error": "User registration failed"}, status=400)
 
 
-class GetUserInChannelView(APIView):
-    """
-    Retrieves all users in a specific channel.
-    """
-
-    def get(self, request, channel_id):
-        """
-        Get all users in a channel.
-        """
-        users = ChannelUser.get_users_by_channel(channel_id)
-        if not users:
-            return Response({"error": "No users found in this channel"}, status=404)
-
-        user_data = [{"id": user.id, "username": user.username} for user in users]
-        return Response(user_data, status=200)
-
-
-class GetChannelFromUserView(APIView):
-    """
-    Retrieves all channels a specific user is part of.
-    """
-
-    def get(self, request, user_id):
-        """
-        Get all channels for a user.
-        """
-        channels = ChannelUser.get_channels_by_user(user_id)
-        if not channels:
-            return Response({"error": "No channels found for this user"}, status=404)
-
-        channel_data = [{"id": channel.id, "name": channel.name} for channel in channels]
-        return Response(channel_data, status=200)
-
-
+# ==========================
+# GET USER PROFILE
+# ==========================
 class GetUserProfileView(APIView):
-    """
-    Retrieves the profile of a user.
-    """
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, user_id):
         user = UserRepository.get_user_by_id(user_id)
         if not user:
             return Response({"error": "User not found"}, status=404)
 
-        profile = UserProfile.objects.filter(user=user).first()
-
-        profile_data = {
+        profile = getattr(user, 'profile', None)
+        return Response({
             "id": user.id,
             "username": user.username,
             "email": user.email,
             "bio": profile.bio if profile else "",
             "tag": profile.tag if profile else ""
-        }
-
-        return Response(profile_data, status=200)
+        }, status=200)
 
 
-class GetMessagesByChannelView(APIView):
-    """
-    Retrieves all messages in a specific channel.
-    """
+# ==========================
+# GET SERVERS OF USER
+# ==========================
+class GetServersOfUserView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, user_id):
+        servers = ServerUser.get_servers_by_user(user_id)
+        if not servers:
+            return Response({"error": "No servers found for this user"}, status=404)
+
+        data = [{"id": su.server.id, "name": su.server.name} for su in servers]
+        return Response(data, status=200)
+
+
+# ==========================
+# GET USERS IN CHANNEL
+# ==========================
+class GetUsersInChannelView(APIView):
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, channel_id):
-        """
-        Get all messages in a channel.
-        """
+        try:
+            channel = Channel.objects.get(id=channel_id)
+        except Channel.DoesNotExist:
+            return Response({"error": "Channel not found"}, status=404)
+
+        server_users = ServerUser.objects.filter(server=channel.server)
+        user_data = [{"id": su.user.id, "username": su.user.username} for su in server_users]
+
+        return Response(user_data, status=200)
+
+
+# ==========================
+# GET CHANNELS OF USER IN SERVER
+# ==========================
+class GetChannelsOfUserView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, user_id):
+        servers = ServerUser.get_servers_by_user(user_id)
+        channels = Channel.objects.filter(server__in=[su.server for su in servers])
+
+        if not channels:
+            return Response({"error": "No channels found for this user"}, status=404)
+
+        channel_data = [{"id": c.id, "name": c.name, "server": c.server.name} for c in channels]
+        return Response(channel_data, status=200)
+
+
+# ==========================
+# GET MESSAGES BY CHANNEL
+# ==========================
+class GetMessagesByChannelView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, channel_id):
         messages = MessageRepository.get_messages_by_channel(channel_id)
         if not messages:
             return Response({"error": "No messages found in this channel"}, status=404)
 
         message_data = [
             {
-                "id": message.id,
-                 "content": message.content,
-                 "created_at": message.created_at,
-                 "from": message.user
-             } for message in messages
+                "id": m.id,
+                "content": m.content,
+                "created_at": m.created_at,
+                "from": m.user.username
+            } for m in messages
         ]
         return Response(message_data, status=200)
 
-class CreateMessage(APIView):
-    """
-    Creates a new message in a specific channel.
-    """
+
+# ==========================
+# CREATE MESSAGE
+# ==========================
+class CreateMessageView(APIView):
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        """
-        Create a new message in a channel.
-        """
         content = request.data.get('content')
         channel_id = request.data.get('channel_id')
         user = request.user

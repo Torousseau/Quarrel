@@ -1,25 +1,47 @@
 import React, { useEffect, useState } from "react";
 import "../assets/styles/Sidebar.css";
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+
+// Fonction utilitaire pour récupérer l'access token depuis le localStorage
+const getAccessToken = () => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    return userData?.access || null;
+};
 
 export default function Sidebar({ userId, onSelectServer }) {
     const [servers, setServers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
-    const token = JSON.parse(localStorage.getItem("user"))?.token;
-    const user = JSON.parse(localStorage.getItem("user"))?.user;
+    const [user] = useState(JSON.parse(localStorage.getItem("user"))?.user || null);
     const navigate = useNavigate();
 
     useEffect(() => {
         const fetchServers = async () => {
+            const token = getAccessToken();
+            if (!token) {
+                setError("No valid access token found. Please login again.");
+                setLoading(false);
+                return;
+            }
+
             try {
-                const res = await fetch(`http://localhost:5000/api/users/${userId}/servers`, {
-                    headers: {"Authorization": `Bearer ${token}`}
+                const res = await fetch(`http://localhost:8000/api/user/${userId}/servers/`, {
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    }
                 });
+
+                if (res.status === 401) {
+                    setError("Access token expired or invalid. Please login again.");
+                    setLoading(false);
+                    return;
+                }
+
                 if (!res.ok) throw new Error("Erreur lors du chargement des serveurs");
 
                 const data = await res.json();
-                console.log(data);
+                console.log("Servers fetched:", data);
                 setServers(data);
             } catch (err) {
                 setError(err.message);
@@ -27,10 +49,11 @@ export default function Sidebar({ userId, onSelectServer }) {
                 setLoading(false);
             }
         };
-        console.log(userId)
+
         if (userId) fetchServers();
     }, [userId]);
 
+    // Déconnexion
     function handleLogout() {
         localStorage.removeItem("user");
         navigate("/login");
@@ -47,7 +70,7 @@ export default function Sidebar({ userId, onSelectServer }) {
             <ul className="server-list">
                 {servers.map((server) => (
                     <li
-                        key={server._id}
+                        key={server.id}
                         className="server-item"
                         onClick={() => onSelectServer?.(server)}
                     >
