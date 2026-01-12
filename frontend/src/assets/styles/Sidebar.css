@@ -1,0 +1,121 @@
+.sidebar {
+    width: 260px;
+    height: 100vh; /* prend toute la hauteur de la fenêtre */
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(180deg, #1e1e2f, #111);
+    color: white;
+    padding: 20px;
+    border-right: 2px solid rgba(255, 255, 255, 0.1);
+    box-sizing: border-box; /* pour inclure padding dans la hauteur */
+}
+
+.sidebar-title {
+    font-size: 1.3rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #89b4ff;
+}
+
+.sidebar-loading,
+.sidebar-error {
+    text-align: center;
+    font-size: 0.9rem;
+    color: #ccc;
+}
+
+.server-list {
+    flex-grow: 1; /* prend tout l’espace vertical restant */
+    overflow-y: auto;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.server-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.server-item:hover {
+    background: rgba(137, 180, 255, 0.15);
+    transform: scale(1.02);
+}
+
+.server-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4f46e5, #3b82f6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.server-name {
+    flex: 1;
+    font-size: 1rem;
+    color: #f3f4f6;
+}
+
+/* Profil en bas */
+.sidebar-profile {
+    margin-top: auto; /* pousse le profil en bas */
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    gap: 10px;
+    cursor: default;
+}
+
+.profile-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4f46e5, #3b82f6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: white;
+}
+
+.profile-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.9rem;
+    color: white;
+}
+
+.profile-email {
+    font-weight: 500;
+}
+
+.logout-button {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.logout-button:hover {
+    background: #f87171;
+}
