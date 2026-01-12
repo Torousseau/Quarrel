@@ -18,21 +18,38 @@ class LoginView(APIView):
     """
 
     def post(self, request):
-        """
-        Handle user login.
-        """
         username = request.data.get('username')
         password = request.data.get('password')
 
         user = authenticate(username=username, password=password)
 
-        if user is not None:
-            if not user.is_active:
-                return Response({"error": "User is inactive"}, status=403)
-            user = User.objects.get(username=username)  # Remplacez par l'utilisateur souhaité
-            token, created = Token.objects.get_or_create(user=user)
-            return Response({"token": token.key, "user_id": user.id}, status=200)
-        return Response({"error": "Invalid credentials"}, status=401)
+        if user is None:
+            return Response({"error": "Invalid credentials"}, status=401)
+
+        if not user.is_active:
+            return Response({"error": "User is inactive"}, status=403)
+
+        token, _ = Token.objects.get_or_create(user=user)
+
+        profile = UserProfile.objects.filter(user=user).first()
+        channels = ChannelUser.get_channels_by_user(user.id)
+
+        return Response({
+            "token": token.key,
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "bio": profile.bio if profile else "",
+                "tag": profile.tag if profile else "",
+            },
+            "channels": [
+                {
+                    "id": channel.id,
+                    "name": channel.name
+                } for channel in channels
+            ]
+        }, status=200)
 
 
 class LogoutView(APIView):
