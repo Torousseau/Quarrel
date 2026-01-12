@@ -9,6 +9,8 @@ from API.repositories.channel import ChannelRepository
 from API.repositories.message import MessageRepository
 from API.repositories.user import UserRepository
 
+from API.models import UserProfile
+
 
 class LoginView(APIView):
     """
@@ -114,20 +116,20 @@ class GetUserProfileView(APIView):
     """
 
     def get(self, request, user_id):
-        """
-        Get user profile by user ID.
-        """
         user = UserRepository.get_user_by_id(user_id)
         if not user:
             return Response({"error": "User not found"}, status=404)
+
+        profile = UserProfile.objects.filter(user=user).first()
 
         profile_data = {
             "id": user.id,
             "username": user.username,
             "email": user.email,
-            "bio": getattr(user.profile, 'bio', ''),
-            "tag": getattr(user.profile, 'tag', '')
+            "bio": profile.bio if profile else "",
+            "tag": profile.tag if profile else ""
         }
+
         return Response(profile_data, status=200)
 
 

@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import "../assets/styles/LoginPage.css";
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export default function LoginPage({ onLogin }) {
-    const [email, setEmail] = useState("");
+    const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
@@ -18,7 +18,7 @@ export default function LoginPage({ onLogin }) {
             const res = await fetch("http://127.0.0.1:8000/api/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password }),
+                body: JSON.stringify({ username, password }),
             });
 
             const data = await res.json();
@@ -50,13 +50,13 @@ export default function LoginPage({ onLogin }) {
 
                 <form onSubmit={handleSubmit} className="login-form">
                     <div className="input-group">
-                        <label>Adresse e-mail</label>
+                        <label>Nom d'utilisateur</label>
                         <input
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            type="text"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
                             required
-                            placeholder="exemple@email.com"
+                            placeholder="Votre pseudo"
                         />
                     </div>
 
@@ -79,10 +79,9 @@ export default function LoginPage({ onLogin }) {
                         {loading ? "Connexion..." : "Se connecter"}
                     </button>
                 </form>
-
-                {/*<p className="login-footer">*/}
-                {/*    Pas encore de compte ? <a href="/register">Inscrivez-vous</a>*/}
-                {/*</p>*/}
+                <p className="login-footer">
+                    Pas encore de compte ? <a href="/register">Inscrivez-vous</a>
+                </p>
             </div>
         </div>
     );
