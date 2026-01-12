@@ -1,13 +1,13 @@
 .sidebar {
     width: 260px;
-    height: 100vh; /* prend toute la hauteur de la fenêtre */
+    height: 100vh;
     display: flex;
     flex-direction: column;
     background: linear-gradient(180deg, #1e1e2f, #111);
     color: white;
     padding: 20px;
     border-right: 2px solid rgba(255, 255, 255, 0.1);
-    box-sizing: border-box; /* pour inclure padding dans la hauteur */
+    box-sizing: border-box;
 }
 
 .sidebar-title {
@@ -15,7 +15,7 @@
     font-weight: bold;
     margin-bottom: 20px;
     text-align: center;
-    color: #89b4ff;
+    color: #fff;
 }
 
 .sidebar-loading,
@@ -26,7 +26,7 @@
 }
 
 .server-list {
-    flex-grow: 1; /* prend tout l’espace vertical restant */
+    flex-grow: 1;
     overflow-y: auto;
     list-style: none;
     padding: 0;
@@ -68,9 +68,8 @@
     color: #f3f4f6;
 }
 
-/* Profil en bas */
 .sidebar-profile {
-    margin-top: auto; /* pousse le profil en bas */
+    margin-top: auto;
     display: flex;
     align-items: center;
     padding: 15px;

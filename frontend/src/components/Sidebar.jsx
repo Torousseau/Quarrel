@@ -1,12 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "../assets/styles/Sidebar.css";
 import { useNavigate } from "react-router-dom";
-
-// Fonction utilitaire pour récupérer l'access token depuis le localStorage
-const getAccessToken = () => {
-    const userData = JSON.parse(localStorage.getItem("user"));
-    return userData?.access || null;
-};
+import { getAccessToken } from "../utils/GetAccesToken.js";
 
 export default function Sidebar({ userId, onSelectServer }) {
     const [servers, setServers] = useState([]);
@@ -52,6 +47,12 @@ export default function Sidebar({ userId, onSelectServer }) {
 
         if (userId) fetchServers();
     }, [userId]);
+
+    useEffect(() => {
+        if (servers.length > 0 && onSelectServer) {
+            onSelectServer(servers[0]);
+        }
+    }, [servers]);
 
     // Déconnexion
     function handleLogout() {
