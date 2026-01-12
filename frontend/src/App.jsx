@@ -1,55 +1,19 @@
-import React, {useEffect, useState} from "react";
-import Sidebar from "./components/Sidebar";
-import ChannelList from "./components/ChannelList";
-import ChatApp from "./pages/ChatPage";
-import ProfileCard from "./components/ProfileCard";
-import "./App.css";
-import config from "../config.js";
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import LoginPage from "./pages/LoginPage.jsx";
+import DefaultPage from "./pages/DefaultPage.jsx";
+import HomePage from "./pages/HomePage.jsx";
 
-const App = () => {
-
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [allChannels, setAllChannels] = useState([]);
-    const [currentChannel, setCurrentChannel] = useState(null);
-   const [user] = useState(localStorage.getItem('userId'));
-
-    useEffect(() => {
-        if (isAuthenticated) {
-            fetchChannels();
-        }
-    }, [isAuthenticated]);
-
-    const handleLogin = () => {
-        setIsAuthenticated(true);
-    };
-
-    if (!isAuthenticated) {
-        return <LoginPage onLogin={handleLogin} />;
-    }
-
-    const fetchChannels = async () => {
-        try {
-            const response = await fetch(`${config.BASE_URL}/user/${user}/channels`);
-            const channels = await response.json();
-            setAllChannels(channels);
-        } catch (error) {
-            console.error("Error fetching channels:", error);
-            setAllChannels([]);
-        }
-    };
-
+export default function App() {
     return (
-        <div className="app">
-            {/*<Sidebar />*/}
-            <ChannelList
-                channels={allChannels}
-                onSelect={setCurrentChannel}
-                current={currentChannel}
-            />
-            <ChatApp channel={currentChannel} />
-        </div>
-    );
-};
+        <Router>
+            <Routes>
+                <Route path="/" element={<DefaultPage />} />
 
-export default App;
+                <Route path="/login" element={<LoginPage />} />
+
+                <Route path="/home" element={<HomePage />} />
+            </Routes>
+        </Router>
+    );
+}
