@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken, Token
 
 from API.models import UserProfile, ServerUser, Server, Channel, Message
 from API.repositories.channel import ChannelRepository
@@ -63,6 +63,8 @@ class LogoutView(APIView):
 class RegisterView(APIView):
     permission_classes = [AllowAny]
 
+    permission_classes = [AllowAny]
+
     def post(self, request):
         username = request.data.get('username')
         email = request.data.get('email')
@@ -77,8 +79,29 @@ class RegisterView(APIView):
             return Response({"error": "Email already exists"}, status=400)
 
         user = UserRepository.create_user(username=username, email=email, password=password)
+
+        refresh = RefreshToken.for_user(user)
+        profile = UserProfile.objects.filter(user=user).first()
+        servers = ServerUser.get_servers_by_user(user.id)
+
         if user:
-            return Response({"message": "User registered successfully"}, status=201)
+            return Response({
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+                "user": {
+                    "id": user.id,
+                    "username": user.username,
+                    "email": user.email,
+                    "bio": profile.bio if profile else "",
+                    "tag": profile.tag if profile else "",
+                },
+                "servers": [
+                    {
+                        "id": su.server.id,
+                        "name": su.server.name
+                    } for su in servers
+                ]
+            }, status=200)
         return Response({"error": "User registration failed"}, status=400)
 
 class GetUserProfileView(APIView):

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 export default function LoginPage({ onLogin }) {
     const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
@@ -15,10 +16,10 @@ export default function LoginPage({ onLogin }) {
         setLoading(true);
 
         try {
-            const res = await fetch("http://127.0.0.1:8000/api/login/", {
+            const res = await fetch("http://127.0.0.1:8000/api/register/", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, password }),
+                body: JSON.stringify({ username, password, email }),
             });
 
             const data = await res.json();
@@ -28,10 +29,10 @@ export default function LoginPage({ onLogin }) {
             }
 
             localStorage.setItem("user", JSON.stringify(data));
+
             console.log(data);
 
             if (onLogin) onLogin(data);
-
             navigate("/");
         } catch (err) {
             setError(err.message);
@@ -63,6 +64,17 @@ export default function LoginPage({ onLogin }) {
                     </div>
 
                     <div className="input-group">
+                        <label>Email</label>
+                        <input
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            type="email"
+                            required
+                            placeholder="nom@mail.com"
+                        />
+                    </div>
+
+                    <div className="input-group">
                         <label>Mot de passe</label>
                         <input
                             type="password"
@@ -78,22 +90,9 @@ export default function LoginPage({ onLogin }) {
                         disabled={loading}
                         className={`login-button ${loading ? "disabled" : ""}`}
                     >
-                        {loading ? "Connexion..." : "Se connecter"}
+                        {loading ? "Connexion..." : "Créer un compte"}
                     </button>
                 </form>
-
-                <p className="login-footer">
-                    Pas encore de compte ?{" "}
-                    <a
-                        href="#!"
-                        onClick={(e) => {
-                            e.preventDefault();
-                            navigate("/register");
-                        }}
-                    >
-                        Inscrivez-vous
-                    </a>
-                </p>
             </div>
         </div>
     );
