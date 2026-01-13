@@ -37,6 +37,7 @@ class LoginView(APIView):
                 "email": user.email,
                 "bio": profile.bio if profile else "",
                 "tag": profile.tag if profile else "",
+                "avatar": profile.avatar.url if profile and profile.avatar else None,
             },
             "servers": [
                 {
@@ -119,8 +120,17 @@ class GetUserProfileView(APIView):
             "username": user.username,
             "email": user.email,
             "bio": profile.bio if profile else "",
-            "tag": profile.tag if profile else ""
+            "tag": profile.tag if profile else "",
+            "avatar": profile.avatar.url if profile and profile.avatar else None
         }, status=200)
+
+class GetUsersView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        users = User.objects.all()
+        user_data = [{"id": u.id, "username": u.username} for u in users]
+        return Response(user_data, status=200)
 
 class GetServersOfUserView(APIView):
     permission_classes = [IsAuthenticated]
@@ -185,7 +195,7 @@ class GetMessagesByChannelView(APIView):
                 "id": m.id,
                 "content": m.content,
                 "created_at": m.created_at,
-                "from": m.user.username
+                "from": m.user.id
             } for m in messages
         ]
         return Response(message_data, status=200)
@@ -273,20 +283,6 @@ class AddUserToServerView(APIView):
 
         return Response({"message": "User added to server successfully"}, status=200)
 
-class UpdateUserProfileView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def put(self, request):
-        bio = request.data.get('bio', '')
-        tag = request.data.get('tag', '')
-
-        profile, created = UserProfile.objects.get_or_create(user=request.user)
-        profile.bio = bio
-        profile.tag = tag
-        profile.save()
-
-        return Response({"message": "Profile updated successfully"}, status=200)
-
 class DeleteMessageView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -329,3 +325,29 @@ class DeleteServerView(APIView):
 
         server.delete()
         return Response({"message": "Server deleted successfully"}, status=200)
+
+class UpdateUserProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request):
+        profile, created = UserProfile.objects.get_or_create(user=request.user)
+
+        profile.bio = request.data.get('bio', profile.bio)
+        profile.tag = request.data.get('tag', profile.tag)
+
+        if 'avatar' in request.FILES:
+            profile.avatar = request.FILES['avatar']
+
+        profile.save()
+
+        return Response({
+            "message": "Profile updated successfully",
+            "user": {
+                "id": request.user.id,
+                "username": request.user.username,
+                "email": request.user.email,
+                "bio": profile.bio,
+                "tag": profile.tag,
+                "avatar": profile.avatar.url if profile.avatar else None
+            }
+        }, status=200)

@@ -1,5 +1,7 @@
 from django.contrib import admin
 from django.urls import path
+from django.conf import settings
+from django.conf.urls.static import static
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from API.views import (
@@ -19,6 +21,8 @@ from API.views import (
     DeleteChannelView,
     DeleteServerView,
     LogoutView,
+    GetUsersView,
+    UpdateUserProfileView,
 )
 
 urlpatterns = [
@@ -32,9 +36,11 @@ urlpatterns = [
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
 
+    path("api/users/", GetUsersView.as_view(), name="get_users"),
     path("api/user/profile/<int:user_id>/", GetUserProfileView.as_view(), name="get_user_profile"),
     path("api/user/<int:user_id>/servers/", GetServersOfUserView.as_view(), name="get_servers_of_user"),
     path("api/user/<int:user_id>/channels/", GetChannelsOfUserView.as_view(), name="get_channels_of_user"),
+    path("api/user/profile/update/", UpdateUserProfileView.as_view(), name="update_user_profile"),
 
     path("api/server/create/", CreateServerView.as_view(), name="create_server"),
     path("api/server/<int:server_id>/channels/", GetChannelsOfServerView.as_view(), name="get_channels_of_server"),
@@ -49,3 +55,6 @@ urlpatterns = [
     path("api/message/create/", CreateMessageView.as_view(), name="create_message"),
     path("api/message/<int:message_id>/delete/", DeleteMessageView.as_view(), name="delete_message"),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -4,7 +4,6 @@ import {getAccessToken} from "../utils/GetAccesToken.js";
 
 const ChatInput = ({ channelId, onMessageSent }) => {
     const [input, setInput] = useState("");
-    const storedUser = JSON.parse(localStorage.getItem("user"));
     const token = getAccessToken()
 
     const handleSubmit = async (e) => {

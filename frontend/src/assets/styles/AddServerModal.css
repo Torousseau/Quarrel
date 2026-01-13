@@ -1,0 +1,126 @@
+.add-server-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+    padding: 1rem;
+}
+
+.add-server-modal {
+    position: relative;
+    width: 100%;
+    max-width: 720px;
+    padding: 2rem;
+    border-radius: 16px;
+    background-color: #0f172a;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    animation: modalIn 0.25s ease-out;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.add-server-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: transparent;
+    padding: 0;
+    border: none;
+    color: #cbd5f5;
+    font-size: 1.5rem;
+    font-weight: bold;
+    line-height: 1;
+    cursor: pointer;
+    transition: color 0.2s, transform 0.15s;
+}
+
+.add-server-close:hover {
+    color: white;
+    transform: scale(1.15);
+}
+
+.add-server-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+}
+
+@media (min-width: 768px) {
+    .add-server-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 3rem;
+    }
+}
+
+.add-server-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+.add-server-section h2 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #f8fafc;
+    margin-bottom: 0.25rem;
+}
+
+.add-server-section p {
+    font-size: 0.875rem;
+    color: #94a3b8;
+    line-height: 1.4;
+}
+
+.add-server-section input {
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    background-color: #020617;
+    color: #f8fafc;
+    outline: none;
+    transition: border 0.2s, box-shadow 0.2s;
+    font-size: 0.95rem;
+}
+
+.add-server-section input:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.35);
+}
+
+.add-server-section button {
+    margin-top: auto;
+    padding: 12px 18px;
+    border-radius: 8px;
+    background-color: #6366f1;
+    color: #ffffff;
+    font-weight: 500;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s, opacity 0.2s;
+}
+
+.add-server-section button:hover:not(:disabled) {
+    background-color: #4f46e5;
+    transform: translateY(-1px);
+}
+
+.add-server-section button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+@keyframes modalIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}

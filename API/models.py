@@ -7,13 +7,18 @@ class UserProfile(models.Model):
         on_delete=models.CASCADE,
         related_name='profile'
     )
-
     bio = models.TextField(blank=True, null=True)
     tag = models.CharField(
         max_length=50,
         unique=True,
         blank=True,
         null=True
+    )
+    avatar = models.ImageField(
+        upload_to='avatars/',
+        blank=True,
+        null=True,
+        default='avatars/default.png'
     )
 
     def __str__(self):

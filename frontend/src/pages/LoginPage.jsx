@@ -11,6 +11,7 @@ export default function LoginPage({ onLogin }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        console.log("Form submitted");
         setError("");
         setLoading(true);
 
@@ -84,15 +85,13 @@ export default function LoginPage({ onLogin }) {
 
                 <p className="login-footer">
                     Pas encore de compte ?{" "}
-                    <a
-                        href="#!"
-                        onClick={(e) => {
-                            e.preventDefault();
-                            navigate("/register");
-                        }}
+                    <button
+                        type="button"
+                        className="link-button"
+                        onClick={() => navigate("/register")}
                     >
                         Inscrivez-vous
-                    </a>
+                    </button>
                 </p>
             </div>
         </div>

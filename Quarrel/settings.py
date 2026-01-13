@@ -65,6 +65,10 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'Quarrel.wsgi.application'
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+
 # Database
 DATABASES = {
     'default': {

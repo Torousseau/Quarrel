@@ -1,30 +1,24 @@
-import React, { useEffect, useRef, useState, useMemo } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "../assets/styles/ChatMessages.css";
 import { getAccessToken } from "../utils/GetAccesToken.js";
 
 const ChatMessages = ({ channelId }) => {
     const [messages, setMessages] = useState([]);
+    const [profiles, setProfiles] = useState({});
     const messagesEndRef = useRef(null);
     const prevMessagesLengthRef = useRef(0);
 
     const storedUser = JSON.parse(localStorage.getItem("user"));
-    const currentUsername = storedUser?.user?.username;
+    const currentUserId = storedUser?.user?.id;
+
+    const token = getAccessToken();
 
     const fetchMessages = async () => {
-        if (!channelId) return;
-
-        const token = getAccessToken();
-        if (!token) return;
-
+        if (!channelId || !token) return;
         try {
-            const url = `http://localhost:8000/api/channel/${channelId}/messages/`;
-
-            const res = await fetch(url, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+            const res = await fetch(`http://localhost:8000/api/channel/${channelId}/messages/`, {
+                headers: { Authorization: `Bearer ${token}` },
             });
-
             const text = await res.text();
             let data = [];
             try {
@@ -32,48 +26,73 @@ const ChatMessages = ({ channelId }) => {
             } catch {
                 console.warn("Réponse du fetch non JSON :", text);
             }
-
             setMessages(data);
         } catch (err) {
             console.error("Erreur fetch messages :", err);
         }
     };
 
+    const fetchProfile = async (userId) => {
+        if (!token) return null;
+        if (profiles[userId]) return profiles[userId];
+        try {
+            const res = await fetch(`http://127.0.0.1:8000/api/user/profile/${userId}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const profile = await res.json();
+            setProfiles((prev) => ({ ...prev, [userId]: profile }));
+            return profile;
+        } catch (err) {
+            console.error("Erreur fetch profile :", err);
+            return null;
+        }
+    };
+
     useEffect(() => {
         fetchMessages();
-        const interval = setInterval(fetchMessages, 500);
+        const interval = setInterval(fetchMessages, 100);
         return () => clearInterval(interval);
     }, [channelId]);
+
+    useEffect(() => {
+        messages.forEach((msg) => {
+            if (msg.from && !profiles[msg.from]) {
+                fetchProfile(msg.from);
+            }
+        });
+    }, [messages]);
 
     useEffect(() => {
         if (messages.length > prevMessagesLengthRef.current) {
             messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
         }
-
         prevMessagesLengthRef.current = messages.length;
     }, [messages]);
 
-    const renderedMessages = useMemo(() => {
-        return messages.map((msg, idx) => {
-            const isUser =
-                msg.from?.trim().toLowerCase() ===
-                currentUsername?.trim().toLowerCase();
-
-            return (
-                <div key={idx} className={`message ${isUser ? "user" : "bot"}`}>
-                    <span className="avatar">{msg.avatar}</span>
-                    <div className="content">
-                        {!isUser && <span className="username">{msg.from}</span>}
-                        <span className="text">{msg.content}</span>
-                    </div>
-                </div>
-            );
-        });
-    }, [messages, currentUsername]);
-
     return (
         <div className="chat-messages">
-            {renderedMessages}
+            {messages.map((msg, idx) => {
+                const isUser = msg.from === currentUserId;
+                const profile = profiles[msg.from];
+
+                return (
+                    <div key={idx} className={`message ${isUser ? "user" : "bot"}`}>
+                        <span className="avatar">
+                            {
+profile && profile.avatar ? (
+                                <img src={`http://127.0.0.1:8000${profile.avatar}`} alt="avatar" />
+                            ) : (
+                                <div className="avatar-placeholder">{(profile?.username || "U").charAt(0).toUpperCase()}</div>
+                            )
+                            }
+                        </span>
+                        <div className="content">
+                            {!isUser && <span className="username">{profile?.username || "Utilisateur"}</span>}
+                            <span className="text">{msg.content}</span>
+                        </div>
+                    </div>
+                );
+            })}
             <div ref={messagesEndRef} />
         </div>
     );

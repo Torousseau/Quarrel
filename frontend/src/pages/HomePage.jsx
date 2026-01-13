@@ -5,6 +5,7 @@ import "../assets/styles/HomePage.css";
 import { getAccessToken } from "../utils/GetAccesToken.js";
 import ChatMessages from "../components/ChatMessages.jsx";
 import ChatInput from "../components/ChatInput.jsx";
+import AddServerModal from "../components/AddServerModal.jsx";
 
 export default function HomePage() {
     const user = JSON.parse(localStorage.getItem("user"))?.user;
@@ -14,10 +15,11 @@ export default function HomePage() {
     const [currentChannel, setCurrentChannel] = useState(null);
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const [addServerModalOpen, setAddServerModalOpen] = useState(false);
 
     useEffect(() => {
         const fetchChannels = async () => {
-            if (!selectedServer) return;
+            if (!selectedServer || addServerModalOpen) return;
 
             setLoading(true);
             setError("");
@@ -40,7 +42,9 @@ export default function HomePage() {
                     },
                 });
 
-                if (!res.ok) throw new Error("Erreur lors du chargement des canaux");
+                if (!res.ok) {
+                    throw new Error("Erreur lors du chargement des canaux");
+                }
 
                 const data = await res.json();
                 setChannels(data);
@@ -53,14 +57,23 @@ export default function HomePage() {
         };
 
         fetchChannels();
-    }, [selectedServer]);
+    }, [selectedServer, addServerModalOpen]);
 
     return (
         <div className="home-container">
-            <Sidebar userId={user?.id} onSelectServer={setSelectedServer} />
+            <Sidebar
+                userId={user?.id}
+                onSelectServer={setSelectedServer}
+                setAddServerModalOpen={setAddServerModalOpen}
+            />
 
             <div className="home-content">
-                {selectedServer ? (
+                {addServerModalOpen ? (
+                    <AddServerModal
+                        isOpen={true}
+                        onClose={() => setAddServerModalOpen(false)}
+                    />
+                ) : selectedServer ? (
                     <>
                         <div className="channels-content">
                             {loading && <p>Chargement...</p>}
@@ -88,9 +101,7 @@ export default function HomePage() {
                         </div>
                     </>
                 ) : (
-                    <div className="server-placeholder">
-                        <h1>Sélectionnez un serveur</h1>
-                    </div>
+                    <div className="server-placeholder" />
                 )}
             </div>
         </div>
