@@ -50,6 +50,7 @@ class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        print(request.user)
         refresh_token = request.data.get('refresh')
         if not refresh_token:
             return Response({"error": "Refresh token required"}, status=400)
@@ -61,8 +62,6 @@ class LogoutView(APIView):
             return Response({"error": "Invalid token"}, status=400)
 
 class RegisterView(APIView):
-    permission_classes = [AllowAny]
-
     permission_classes = [AllowAny]
 
     def post(self, request):

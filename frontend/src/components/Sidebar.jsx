@@ -2,9 +2,11 @@ import React, { useEffect, useState } from "react";
 import "../assets/styles/Sidebar.css";
 import { useNavigate } from "react-router-dom";
 import { getAccessToken } from "../utils/GetAccesToken.js";
+import CreateServer from "./CreateServer.jsx";
 
 export default function Sidebar({ userId, onSelectServer }) {
     const [servers, setServers] = useState([]);
+    const [displayCreateServer, setDisplayCreateServer] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [user] = useState(JSON.parse(localStorage.getItem("user"))?.user || null);
@@ -81,7 +83,16 @@ export default function Sidebar({ userId, onSelectServer }) {
                         <span className="server-name">{server.name}</span>
                     </li>
                 ))}
+                <li>
+                    <button
+                        className="create-server-button"
+                        onClick={() => setDisplayCreateServer(true)}
+                    >
+                        + Créer un serveur
+                    </button>
+                </li>
             </ul>
+            {displayCreateServer && <CreateServer onClose={() => setDisplayCreateServer(false)} />}
 
             {user && (
                 <div className="sidebar-profile">
