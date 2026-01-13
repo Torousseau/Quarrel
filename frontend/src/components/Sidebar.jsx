@@ -97,7 +97,7 @@ export default function Sidebar({ userId, onSelectServer }) {
                     </button>
                 </li>
             </ul>
-            {displayCreateServer && <CreateServer onClose={() => setDisplayCreateServer(false)} />}
+            {displayCreateServer && <CreateServer/>}
 
             {user && (
                 <div className="sidebar-profile">

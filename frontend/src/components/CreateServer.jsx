@@ -24,15 +24,16 @@ export default function CreateServer() {
             const data = await res.json();
 
             if (!res.ok) {
-                throw new Error(data.error || "Erreur de connexion");
+                throw new Error(data.error || "Erreur de création");
             }
 
-            navigate("/home");
         } catch (err) {
             setError(err.message);
+        } finally {
+            window.location.reload();
         }
-
     }
+
     return (
         <div className="create-server-page">
             <h1>Create Server Page</h1>
