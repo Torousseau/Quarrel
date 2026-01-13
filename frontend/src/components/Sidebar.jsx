@@ -37,7 +37,6 @@ export default function Sidebar({ userId, onSelectServer }) {
                 if (!res.ok) throw new Error("Aucun serveur trouvé pour cet utilisateur");
 
                 const data = await res.json();
-                console.log("Servers fetched:", data);
                 setServers(data);
             } catch (err) {
                 setError(err.message);
@@ -49,7 +48,6 @@ export default function Sidebar({ userId, onSelectServer }) {
         if (userId) fetchServers();
     }, [userId]);
 
-    // Sélection automatique du premier serveur
     useEffect(() => {
         if (servers.length > 0) {
             setSelectedServer(servers[0]);

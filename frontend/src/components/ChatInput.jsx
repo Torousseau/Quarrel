@@ -1,12 +1,41 @@
 import React, { useState } from "react";
+import "../assets/styles/ChatInput.css";
+import {getAccessToken} from "../utils/GetAccesToken.js";
 
-const ChatInput = ({ onSend }) => {
+const ChatInput = ({ channelId, onMessageSent }) => {
     const [input, setInput] = useState("");
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    const token = getAccessToken()
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        onSend(input);
-        setInput("");
+        if (!input.trim()) return;
+
+        try {
+            const response = await fetch("http://127.0.0.1:8000/api/message/create/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    content: input,
+                    channel_id: channelId
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error("Erreur lors de l'envoi du message");
+            }
+
+            const data = await response.json();
+            if (onMessageSent) onMessageSent(data);
+
+            setInput("");
+        } catch (error) {
+            console.error(error);
+            alert("Impossible d'envoyer le message");
+        }
     };
 
     return (
@@ -17,7 +46,7 @@ const ChatInput = ({ onSend }) => {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
             />
-            {/*<button type="submit">Send</button>*/}
+            <button type="submit">Send</button>
         </form>
     );
 };
