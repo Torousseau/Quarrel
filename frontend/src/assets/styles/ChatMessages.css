@@ -1,0 +1,103 @@
+.chat-messages {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    width: 100%;
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+.message {
+    display: flex;
+    align-items: flex-start;
+    max-width: 75%;
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+.avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #dcdcdc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    background: white;
+    border-radius: 14px;
+    padding: 10px 14px;
+    /*width: 50vh;*/
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.username {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #666;
+    margin-bottom: 4px;
+}
+
+.text {
+    font-size: 0.95rem;
+    line-height: 1.4;
+    color: #222;
+    word-wrap: break-word;
+}
+
+.message.user {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+}
+
+.message.user .avatar {
+    margin-left: 10px;
+    margin-right: 0;
+    background: #4f46e5;
+    color: white;
+}
+
+.message.user .content {
+    background: #4f46e5;
+}
+
+.message.user .username {
+    color: #c7d2fe;
+}
+
+.message.user .text {
+    color: white;
+}
+
+.message.bot {
+    align-self: flex-start;
+}
+
+.message.bot .avatar {
+    background: #22c55e;
+    color: white;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 600px) {
+    .message {
+        max-width: 90%;
+    }
+}

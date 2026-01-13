@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken, Token
+from rest_framework_simplejwt.exceptions import TokenError
 
 from API.models import UserProfile, ServerUser, Server, Channel, Message
 from API.repositories.channel import ChannelRepository
@@ -50,7 +51,6 @@ class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        print(request.user)
         refresh_token = request.data.get('refresh')
         if not refresh_token:
             return Response({"error": "Refresh token required"}, status=400)
@@ -62,6 +62,8 @@ class LogoutView(APIView):
             return Response({"error": "Invalid token"}, status=400)
 
 class RegisterView(APIView):
+    permission_classes = [AllowAny]
+
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -130,6 +132,18 @@ class GetServersOfUserView(APIView):
 
         data = [{"id": su.server.id, "name": su.server.name} for su in servers]
         return Response(data, status=200)
+
+class GetChannelsOfServerView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, server_id):
+        channels = ChannelRepository.get_channels_by_server(server_id)
+        if not channels:
+            return Response({"error": "No channels found for this server"}, status=404)
+
+        channel_data = [{"id": c.id, "name": c.name, "description": c.description} for c in channels]
+        return Response(channel_data, status=200)
+
 
 class GetUsersInChannelView(APIView):
     permission_classes = [IsAuthenticated]
@@ -236,3 +250,82 @@ class CreateChannelView(APIView):
         channel = Channel.objects.create(name=name, description=description, server=server)
 
         return Response({"message": "Channel created successfully", "id": channel.id}, status=201)
+
+class AddUserToServerView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user_id = request.data.get('user_id')
+        server_id = request.data.get('server_id')
+
+        if not user_id or not server_id:
+            return Response({"error": "User ID and Server ID are required"}, status=400)
+
+        try:
+            user = User.objects.get(id=user_id)
+            server = Server.objects.get(id=server_id)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=404)
+        except Server.DoesNotExist:
+            return Response({"error": "Server not found"}, status=404)
+
+        ServerUser.objects.get_or_create(user=user, server=server)
+
+        return Response({"message": "User added to server successfully"}, status=200)
+
+class UpdateUserProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request):
+        bio = request.data.get('bio', '')
+        tag = request.data.get('tag', '')
+
+        profile, created = UserProfile.objects.get_or_create(user=request.user)
+        profile.bio = bio
+        profile.tag = tag
+        profile.save()
+
+        return Response({"message": "Profile updated successfully"}, status=200)
+
+class DeleteMessageView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, message_id):
+        message = MessageRepository.get_message_by_id(message_id)
+        if not message:
+            return Response({"error": "Message not found"}, status=404)
+
+        if message.user != request.user:
+            return Response({"error": "You do not have permission to delete this message"}, status=403)
+
+        MessageRepository.delete_message(message_id)
+        return Response({"message": "Message deleted successfully"}, status=200)
+
+class DeleteChannelView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, channel_id):
+        channel = ChannelRepository.get_channel_by_id(channel_id)
+        if not channel:
+            return Response({"error": "Channel not found"}, status=404)
+
+        if channel.server.owner != request.user:
+            return Response({"error": "You do not have permission to delete this channel"}, status=403)
+
+        channel.delete()
+        return Response({"message": "Channel deleted successfully"}, status=200)
+
+class DeleteServerView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, server_id):
+        try:
+            server = Server.objects.get(id=server_id)
+        except Server.DoesNotExist:
+            return Response({"error": "Server not found"}, status=404)
+
+        if server.owner != request.user:
+            return Response({"error": "You do not have permission to delete this server"}, status=403)
+
+        server.delete()
+        return Response({"message": "Server deleted successfully"}, status=200)

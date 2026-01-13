@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import "../assets/styles/ChatMessages.css";
 
 const ChatMessages = ({ messages }) => {
     const messagesEndRef = useRef(null);
@@ -12,9 +13,10 @@ const ChatMessages = ({ messages }) => {
             {messages.map((msg, idx) => (
                 <div key={idx} className={`message ${msg.sender}`}>
                     <span className="avatar">{msg.avatar}</span>
+
                     <div className="content">
-                        <span className="username">{msg.username}</span>
-                        <span className="text">{msg.text}</span>
+                        <span className="username">{msg.from}</span>
+                        <span className="text">{msg.content}</span>
                     </div>
                 </div>
             ))}

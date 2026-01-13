@@ -10,6 +10,7 @@ export default function Sidebar({ userId, onSelectServer }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [user] = useState(JSON.parse(localStorage.getItem("user"))?.user || null);
+    const [selectedServer, setSelectedServer] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -35,7 +36,7 @@ export default function Sidebar({ userId, onSelectServer }) {
                     return;
                 }
 
-                if (!res.ok) throw new Error("Erreur lors du chargement des serveurs");
+                if (!res.ok) throw new Error("Aucun serveur trouvé pour cet utilisateur");
 
                 const data = await res.json();
                 console.log("Servers fetched:", data);
@@ -50,13 +51,14 @@ export default function Sidebar({ userId, onSelectServer }) {
         if (userId) fetchServers();
     }, [userId]);
 
+    // Sélection automatique du premier serveur
     useEffect(() => {
-        if (servers.length > 0 && onSelectServer) {
-            onSelectServer(servers[0]);
+        if (servers.length > 0) {
+            setSelectedServer(servers[0]);
+            onSelectServer?.(servers[0]);
         }
     }, [servers]);
 
-    // Déconnexion
     function handleLogout() {
         localStorage.removeItem("user");
         navigate("/login");
@@ -74,8 +76,11 @@ export default function Sidebar({ userId, onSelectServer }) {
                 {servers.map((server) => (
                     <li
                         key={server.id}
-                        className="server-item"
-                        onClick={() => onSelectServer?.(server)}
+                        className={`server-item ${selectedServer?.id === server.id ? "selected" : ""}`}
+                        onClick={() => {
+                            setSelectedServer(server);
+                            onSelectServer?.(server);
+                        }}
                     >
                         <div className="server-icon">
                             {server.name.charAt(0).toUpperCase()}
