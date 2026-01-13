@@ -14,6 +14,11 @@ from API.views import (
     CreateServerView,
     CreateChannelView,
     GetChannelsOfServerView,
+    AddUserToServerView,
+    DeleteMessageView,
+    DeleteChannelView,
+    DeleteServerView,
+    LogoutView,
 )
 
 urlpatterns = [
@@ -21,6 +26,8 @@ urlpatterns = [
 
     path("api/login/", LoginView.as_view(), name="login"),
     path("api/register/", RegisterView.as_view(), name="register"),
+    path("api/logout/", LogoutView.as_view(), name="logout"),
+
 
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
@@ -31,10 +38,14 @@ urlpatterns = [
 
     path("api/server/create/", CreateServerView.as_view(), name="create_server"),
     path("api/server/<int:server_id>/channels/", GetChannelsOfServerView.as_view(), name="get_channels_of_server"),
+    path("api/server/add_user/", AddUserToServerView.as_view(), name="add_user_to_server"),
+    path("api/server/<int:server_id>/delete/", DeleteServerView.as_view(), name="delete_server"),
 
     path("api/channel/<int:channel_id>/users/", GetUsersInChannelView.as_view(), name="get_users_in_channel"),
     path("api/channel/<int:channel_id>/messages/", GetMessagesByChannelView.as_view(), name="get_messages_by_channel"),
     path("api/channel/create/", CreateChannelView.as_view(), name="create_channel"),
+    path("api/channel/<int:channel_id>/delete/", DeleteChannelView.as_view(), name="delete_channel"),
 
     path("api/message/create/", CreateMessageView.as_view(), name="create_message"),
+    path("api/message/<int:message_id>/delete/", DeleteMessageView.as_view(), name="delete_message"),
 ]
