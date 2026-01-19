@@ -1,16 +1,16 @@
 .home-container {
     display: flex;
     height: 100vh;
-    background: linear-gradient(135deg, #0f0f1a, #1a1a2f);
-    color: white;
+    background: var(--bg-main);
+    color: var(--text-main);
     font-family: 'Inter', sans-serif;
     overflow: hidden;
 }
 
 .channels-content {
     width: 250px;
-    background: #23272a;
-    border-right: 1px solid #374151;
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
@@ -29,19 +29,20 @@
     height: 100%;
 }
 
-.chat-messages-content{
+.chat-messages-content {
     flex: 1;
     display: flex;
     flex-direction: column;
-    background: #111827;
-    border-left: 1px solid #374151;
+    background: var(--bg-chat);
+    border-left: 1px solid var(--border-color);
+}
 
-    h2 {
-        padding: 16px;
-        border-bottom: 1px solid #374151;
-        font-size: 1.25rem;
-        font-weight: 600;
-    }
+.chat-messages-content h2 {
+    padding: 16px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--accent-secondary);
 }
 
 .chat-messages {
@@ -55,30 +56,30 @@
 }
 
 .chat-messages::-webkit-scrollbar-thumb {
-    background: rgba(137, 180, 255, 0.3);
+    background: var(--scrollbar-thumb);
     border-radius: 10px;
 }
 
 .chat-messages::-webkit-scrollbar-thumb:hover {
-    background: rgba(137, 180, 255, 0.5);
+    background: var(--scrollbar-thumb-hover);
 }
 
 .chat-input {
     padding: 12px;
-    border-top: 1px solid #374151;
-    background: #1f2933;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-input);
 }
 
 .home-header {
     font-size: 2rem;
     font-weight: 700;
-    color: #89b4ff;
+    color: var(--accent-main);
     margin-bottom: 20px;
 }
 
 .server-details {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 20px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
@@ -86,15 +87,19 @@
     animation: fadeIn 0.3s ease-in-out;
 }
 
+.theme-light .server-details {
+    background: rgba(0, 0, 0, 0.03);
+}
+
 .server-details h2 {
     font-size: 1.5rem;
     margin-bottom: 10px;
-    color: #60a5fa;
+    color: var(--accent-secondary);
 }
 
 .server-details p {
     font-size: 1rem;
-    color: #d1d5db;
+    color: var(--text-secondary);
     margin-bottom: 6px;
 }
 
@@ -110,16 +115,5 @@
 
 .server-placeholder h1 {
     font-size: 1.8rem;
-    color: #9ca3af;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    color: var(--text-muted);
 }

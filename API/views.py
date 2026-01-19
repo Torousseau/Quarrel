@@ -3,22 +3,24 @@ from django.contrib.auth.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework_simplejwt.tokens import RefreshToken, Token
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 
-from API.models import UserProfile, ServerUser, Server, Channel, Message
+from API.models import UserProfile, ServerUser, Server, Channel
 from API.repositories.channel import ChannelRepository
 from API.repositories.message import MessageRepository
 from API.repositories.user import UserRepository
+
 
 class LoginView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        username = request.data.get('username')
-        password = request.data.get('password')
+        user = authenticate(
+            username=request.data.get('username'),
+            password=request.data.get('password')
+        )
 
-        user = authenticate(username=username, password=password)
         if not user:
             return Response({"error": "Invalid credentials"}, status=401)
         if not user.is_active:
@@ -52,19 +54,15 @@ class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        refresh_token = request.data.get('refresh')
-        if not refresh_token:
-            return Response({"error": "Refresh token required"}, status=400)
         try:
-            token = RefreshToken(refresh_token)
+            token = RefreshToken(request.data.get('refresh'))
             token.blacklist()
             return Response({"message": "Logged out successfully"}, status=205)
         except TokenError:
             return Response({"error": "Invalid token"}, status=400)
 
-class RegisterView(APIView):
-    permission_classes = [AllowAny]
 
+class RegisterView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -80,31 +78,27 @@ class RegisterView(APIView):
         if UserRepository.get_user_by_email(email):
             return Response({"error": "Email already exists"}, status=400)
 
-        user = UserRepository.create_user(username=username, email=email, password=password)
+        user = UserRepository.create_user(
+            username=username,
+            email=email,
+            password=password
+        )
 
         refresh = RefreshToken.for_user(user)
-        profile = UserProfile.objects.filter(user=user).first()
-        servers = ServerUser.get_servers_by_user(user.id)
 
-        if user:
-            return Response({
-                "access": str(refresh.access_token),
-                "refresh": str(refresh),
-                "user": {
-                    "id": user.id,
-                    "username": user.username,
-                    "email": user.email,
-                    "bio": profile.bio if profile else "",
-                    "tag": profile.tag if profile else "",
-                },
-                "servers": [
-                    {
-                        "id": su.server.id,
-                        "name": su.server.name
-                    } for su in servers
-                ]
-            }, status=200)
-        return Response({"error": "User registration failed"}, status=400)
+        return Response({
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "bio": "",
+                "tag": ""
+            },
+            "servers": []
+        }, status=200)
+
 
 class GetUserProfileView(APIView):
     permission_classes = [IsAuthenticated]
@@ -122,101 +116,25 @@ class GetUserProfileView(APIView):
             "bio": profile.bio if profile else "",
             "tag": profile.tag if profile else "",
             "avatar": profile.avatar.url if profile and profile.avatar else None
-        }, status=200)
+        })
 
-class GetUsersView(APIView):
+
+class UpdateUserProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        users = User.objects.all()
-        user_data = [{"id": u.id, "username": u.username} for u in users]
-        return Response(user_data, status=200)
+    def put(self, request):
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
 
-class GetServersOfUserView(APIView):
-    permission_classes = [IsAuthenticated]
+        profile.bio = request.data.get('bio', profile.bio)
+        profile.tag = request.data.get('tag', profile.tag)
 
-    def get(self, request, user_id):
-        servers = ServerUser.get_servers_by_user(user_id)
-        if not servers:
-            return Response({"error": "No servers found for this user"}, status=404)
+        if 'avatar' in request.FILES:
+            profile.avatar = request.FILES['avatar']
 
-        data = [{"id": su.server.id, "name": su.server.name} for su in servers]
-        return Response(data, status=200)
+        profile.save()
 
-class GetChannelsOfServerView(APIView):
-    permission_classes = [IsAuthenticated]
+        return Response({"message": "Profile updated successfully"})
 
-    def get(self, request, server_id):
-        channels = ChannelRepository.get_channels_by_server(server_id)
-        if not channels:
-            return Response({"error": "No channels found for this server"}, status=404)
-
-        channel_data = [{"id": c.id, "name": c.name, "description": c.description} for c in channels]
-        return Response(channel_data, status=200)
-
-
-class GetUsersInChannelView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, channel_id):
-        try:
-            channel = Channel.objects.get(id=channel_id)
-        except Channel.DoesNotExist:
-            return Response({"error": "Channel not found"}, status=404)
-
-        server_users = ServerUser.objects.filter(server=channel.server)
-        user_data = [{"id": su.user.id, "username": su.user.username} for su in server_users]
-
-        return Response(user_data, status=200)
-
-class GetChannelsOfUserView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, user_id):
-        servers = ServerUser.get_servers_by_user(user_id)
-        channels = Channel.objects.filter(server__in=[su.server for su in servers])
-
-        if not channels:
-            return Response({"error": "No channels found for this user"}, status=404)
-
-        channel_data = [{"id": c.id, "name": c.name, "server": c.server.name} for c in channels]
-        return Response(channel_data, status=200)
-
-class GetMessagesByChannelView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, channel_id):
-        messages = MessageRepository.get_messages_by_channel(channel_id)
-        if not messages:
-            return Response({"error": "No messages found in this channel"}, status=404)
-
-        message_data = [
-            {
-                "id": m.id,
-                "content": m.content,
-                "created_at": m.created_at,
-                "from": m.user.id
-            } for m in messages
-        ]
-        return Response(message_data, status=200)
-
-class CreateMessageView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        content = request.data.get('content')
-        channel_id = request.data.get('channel_id')
-        user = request.user
-
-        if not content:
-            return Response({"error": "Content cannot be empty"}, status=400)
-
-        channel = ChannelRepository.get_channel_by_id(channel_id)
-        if not channel:
-            return Response({"error": "Channel not found"}, status=404)
-
-        message = MessageRepository.create_message(channel=channel, user=user, content=content)
-        return Response({"message": "Message created successfully", "id": message.id}, status=201)
 
 class CreateServerView(APIView):
     permission_classes = [IsAuthenticated]
@@ -236,80 +154,73 @@ class CreateServerView(APIView):
 
         ServerUser.objects.create(user=request.user, server=server)
 
-        return Response(
-            {"message": "Server created successfully", "id": server.id},
-            status=201
+        return Response({
+            "id": server.id,
+            "name": server.name,
+            "invite_code": server.invite_code
+        }, status=201)
+
+
+class GetServersOfUserView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, user_id):
+        server_users = ServerUser.objects.filter(user__id=user_id)
+
+        return Response([
+            {
+                "id": su.server.id,
+                "name": su.server.name,
+                "description": su.server.description
+            }
+            for su in server_users
+        ])
+
+
+class JoinServerView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        invite_code = request.data.get('invite_code')
+
+        if not invite_code:
+            return Response({"error": "Invite code is required"}, status=400)
+
+        try:
+            server = Server.objects.get(invite_code=invite_code)
+        except Server.DoesNotExist:
+            return Response({"error": "Invalid invite code"}, status=404)
+
+        ServerUser.objects.get_or_create(
+            user=request.user,
+            server=server
         )
 
-class CreateChannelView(APIView):
+        return Response({
+            "message": "Joined server successfully",
+            "server": {
+                "id": server.id,
+                "name": server.name
+            }
+        })
+
+
+class GetServersView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request):
-        name = request.data.get('name')
-        server_id = request.data.get('server_id')
-        description = request.data.get('description', '')
+    def get(self, request):
+        server_users = ServerUser.objects.filter(user=request.user)
 
-        if not name or not server_id:
-            return Response({"error": "Channel name and server ID are required"}, status=400)
+        return Response([
+            {
+                "id": su.server.id,
+                "name": su.server.name,
+                "description": su.server.description,
+                "invite_code": su.server.invite_code if su.server.owner == request.user else None
+            }
+            for su in server_users
+        ])
 
-        try:
-            server = Server.objects.get(id=server_id)
-        except Server.DoesNotExist:
-            return Response({"error": "Server not found"}, status=404)
-
-        channel = Channel.objects.create(name=name, description=description, server=server)
-
-        return Response({"message": "Channel created successfully", "id": channel.id}, status=201)
-
-class AddUserToServerView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        user_id = request.data.get('user_id')
-        server_id = request.data.get('server_id')
-
-        if not user_id or not server_id:
-            return Response({"error": "User ID and Server ID are required"}, status=400)
-
-        try:
-            user = User.objects.get(id=user_id)
-            server = Server.objects.get(id=server_id)
-        except User.DoesNotExist:
-            return Response({"error": "User not found"}, status=404)
-        except Server.DoesNotExist:
-            return Response({"error": "Server not found"}, status=404)
-
-        ServerUser.objects.get_or_create(user=user, server=server)
-
-        return Response({"message": "User added to server successfully"}, status=200)
-
-class DeleteMessageView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def delete(self, request, message_id):
-        message = MessageRepository.get_message_by_id(message_id)
-        if not message:
-            return Response({"error": "Message not found"}, status=404)
-
-        if message.user != request.user:
-            return Response({"error": "You do not have permission to delete this message"}, status=403)
-
-        MessageRepository.delete_message(message_id)
-        return Response({"message": "Message deleted successfully"}, status=200)
-
-class DeleteChannelView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def delete(self, request, channel_id):
-        channel = ChannelRepository.get_channel_by_id(channel_id)
-        if not channel:
-            return Response({"error": "Channel not found"}, status=404)
-
-        if channel.server.owner != request.user:
-            return Response({"error": "You do not have permission to delete this channel"}, status=403)
-
-        channel.delete()
-        return Response({"message": "Channel deleted successfully"}, status=200)
 
 class DeleteServerView(APIView):
     permission_classes = [IsAuthenticated]
@@ -321,33 +232,115 @@ class DeleteServerView(APIView):
             return Response({"error": "Server not found"}, status=404)
 
         if server.owner != request.user:
-            return Response({"error": "You do not have permission to delete this server"}, status=403)
+            return Response({"error": "Permission denied"}, status=403)
 
         server.delete()
-        return Response({"message": "Server deleted successfully"}, status=200)
+        return Response({"message": "Server deleted"})
 
-class UpdateUserProfileView(APIView):
+
+class CreateChannelView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def put(self, request):
-        profile, created = UserProfile.objects.get_or_create(user=request.user)
+    def post(self, request):
+        name = request.data.get('name')
+        server_id = request.data.get('server_id')
+        description = request.data.get('description', '')
 
-        profile.bio = request.data.get('bio', profile.bio)
-        profile.tag = request.data.get('tag', profile.tag)
+        if not name or not server_id:
+            return Response({"error": "Missing fields"}, status=400)
 
-        if 'avatar' in request.FILES:
-            profile.avatar = request.FILES['avatar']
+        try:
+            server = Server.objects.get(id=server_id)
+        except Server.DoesNotExist:
+            return Response({"error": "Server not found"}, status=404)
 
-        profile.save()
+        if server.owner != request.user:
+            return Response({"error": "Permission denied"}, status=403)
 
-        return Response({
-            "message": "Profile updated successfully",
-            "user": {
-                "id": request.user.id,
-                "username": request.user.username,
-                "email": request.user.email,
-                "bio": profile.bio,
-                "tag": profile.tag,
-                "avatar": profile.avatar.url if profile.avatar else None
+        channel = Channel.objects.create(
+            name=name,
+            description=description,
+            server=server
+        )
+
+        return Response({"id": channel.id}, status=201)
+
+
+class GetChannelsOfServerView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, server_id):
+        channels = ChannelRepository.get_channels_by_server(server_id)
+        return Response([
+            {"id": c.id, "name": c.name, "description": c.description}
+            for c in channels
+        ])
+
+
+class DeleteChannelView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, channel_id):
+        channel = ChannelRepository.get_channel_by_id(channel_id)
+        if not channel:
+            return Response({"error": "Channel not found"}, status=404)
+
+        if channel.server.owner != request.user:
+            return Response({"error": "Permission denied"}, status=403)
+
+        channel.delete()
+        return Response({"message": "Channel deleted"})
+
+
+class GetMessagesByChannelView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, channel_id):
+        messages = MessageRepository.get_messages_by_channel(channel_id)
+        return Response([
+            {
+                "id": m.id,
+                "content": m.content,
+                "created_at": m.created_at,
+                "from": m.user.id
             }
-        }, status=200)
+            for m in messages
+        ])
+
+
+class CreateMessageView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        content = request.data.get('content')
+        channel_id = request.data.get('channel_id')
+
+        if not content:
+            return Response({"error": "Content required"}, status=400)
+
+        channel = ChannelRepository.get_channel_by_id(channel_id)
+        if not channel:
+            return Response({"error": "Channel not found"}, status=404)
+
+        message = MessageRepository.create_message(
+            channel=channel,
+            user=request.user,
+            content=content
+        )
+
+        return Response({"id": message.id}, status=201)
+
+
+class DeleteMessageView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, message_id):
+        message = MessageRepository.get_message_by_id(message_id)
+        if not message:
+            return Response({"error": "Message not found"}, status=404)
+
+        if message.user != request.user:
+            return Response({"error": "Permission denied"}, status=403)
+
+        MessageRepository.delete_message(message_id)
+        return Response({"message": "Message deleted"})

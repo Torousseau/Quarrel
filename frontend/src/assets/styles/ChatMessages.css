@@ -11,15 +11,19 @@
 .message {
     display: flex;
     align-items: flex-start;
-    max-width: 75%;
+    max-width: 70%;
     animation: fadeIn 0.2s ease-in-out;
+
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 
 .avatar {
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: #dcdcdc;
+    background: var(--avatar-bg);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -45,31 +49,41 @@
     font-weight: 600;
     font-size: 16px;
     color: white;
-    background: #999;
+    background: var(--avatar-placeholder-bg);
     text-transform: uppercase;
 }
 
 .content {
     display: flex;
     flex-direction: column;
-    background: white;
+    background: var(--msg-bg);
     border-radius: 14px;
     padding: 10px 14px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+
     word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    white-space: pre-wrap;
+    hyphens: auto;
 }
 
 .username {
     font-size: 0.75rem;
     font-weight: 600;
-    color: #666;
+    color: var(--msg-username);
     margin-bottom: 4px;
 }
 
 .text {
     font-size: 0.95rem;
     line-height: 1.4;
-    color: #222;
+    color: var(--msg-text);
+
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    white-space: pre-wrap;
 }
 
 .message.user {
@@ -80,20 +94,20 @@
 .message.user .avatar {
     margin-left: 10px;
     margin-right: 0;
-    background: #4f46e5;
+    background: var(--msg-user-bg);
     color: white;
 }
 
 .message.user .content {
-    background: #4f46e5;
+    background: var(--msg-user-bg);
 }
 
 .message.user .username {
-    color: #c7d2fe;
+    color: var(--msg-user-username);
 }
 
 .message.user .text {
-    color: white;
+    color: var(--msg-user-text);
 }
 
 .message.bot {
@@ -101,7 +115,7 @@
 }
 
 .message.bot .avatar {
-    background: #dcdcdc;
+    background: var(--avatar-bg);
     color: white;
 }
 
@@ -120,4 +134,9 @@
     .message {
         max-width: 90%;
     }
+}
+
+.content img {
+    max-width: 100%;
+    height: auto;
 }

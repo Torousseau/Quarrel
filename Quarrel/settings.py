@@ -44,6 +44,13 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
+    "http://192.168.1.117:5173"
+]
+
+ALLOWED_HOSTS = [
+    "192.168.1.117",
+    "localhost",
+    "127.0.0.1",
 ]
 
 ROOT_URLCONF = 'Quarrel.urls'

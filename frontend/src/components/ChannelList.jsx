@@ -1,5 +1,6 @@
 import React from "react";
 import "../assets/styles/ChannelsList.css";
+import "../assets/styles/theme.css"
 
 const ChannelList = ({ channels, onSelect, current }) => {
     return (

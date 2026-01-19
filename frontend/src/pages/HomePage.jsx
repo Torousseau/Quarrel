@@ -6,6 +6,8 @@ import { getAccessToken } from "../utils/GetAccesToken.js";
 import ChatMessages from "../components/ChatMessages.jsx";
 import ChatInput from "../components/ChatInput.jsx";
 import AddServerModal from "../components/AddServerModal.jsx";
+import SettingsModal from "../components/SettingsModal.jsx";
+import "../assets/styles/theme.css";
 
 export default function HomePage() {
     const user = JSON.parse(localStorage.getItem("user"))?.user;
@@ -15,11 +17,15 @@ export default function HomePage() {
     const [currentChannel, setCurrentChannel] = useState(null);
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+
     const [addServerModalOpen, setAddServerModalOpen] = useState(false);
+    const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+
+    const [refreshServers, setRefreshServers] = useState(false);
 
     useEffect(() => {
         const fetchChannels = async () => {
-            if (!selectedServer || addServerModalOpen) return;
+            if (!selectedServer || addServerModalOpen || settingsModalOpen) return;
 
             setLoading(true);
             setError("");
@@ -34,7 +40,7 @@ export default function HomePage() {
             }
 
             try {
-                const url = `http://localhost:8000/api/server/${selectedServer.id}/channels/`;
+                const url = `http://192.168.1.117:8000/api/server/${selectedServer.id}/channels/`;
 
                 const res = await fetch(url, {
                     headers: {
@@ -57,7 +63,7 @@ export default function HomePage() {
         };
 
         fetchChannels();
-    }, [selectedServer, addServerModalOpen]);
+    }, [selectedServer, addServerModalOpen, settingsModalOpen]);
 
     return (
         <div className="home-container">
@@ -65,43 +71,58 @@ export default function HomePage() {
                 userId={user?.id}
                 onSelectServer={setSelectedServer}
                 setAddServerModalOpen={setAddServerModalOpen}
+                setSettingsModalOpen={setSettingsModalOpen}
+                refreshServers={refreshServers}
             />
 
+            {addServerModalOpen && (
+                <AddServerModal
+                    isOpen={true}
+                    onClose={() => setAddServerModalOpen(false)}
+                    onJoin={() => setRefreshServers(prev => !prev)}
+                />
+            )}
+
+            {settingsModalOpen && (
+                <SettingsModal
+                    isOpen={true}
+                    onClose={() => setSettingsModalOpen(false)}
+                    user={user}
+                />
+            )}
+
             <div className="home-content">
-                {addServerModalOpen ? (
-                    <AddServerModal
-                        isOpen={true}
-                        onClose={() => setAddServerModalOpen(false)}
-                    />
-                ) : selectedServer ? (
-                    <>
-                        <div className="channels-content">
-                            {loading && <p>Chargement...</p>}
-                            {error && <p className="error">{error}</p>}
+                {!addServerModalOpen && !settingsModalOpen && (
+                    selectedServer ? (
+                        <>
+                            <div className="channels-content">
+                                {loading && <p>Chargement...</p>}
+                                {error && <p className="error">{error}</p>}
 
-                            {!loading && channels.length > 0 && (
-                                <ChannelList
-                                    channels={channels}
-                                    current={currentChannel}
-                                    onSelect={setCurrentChannel}
-                                />
-                            )}
-                        </div>
+                                {!loading && channels.length > 0 && (
+                                    <ChannelList
+                                        channels={channels}
+                                        current={currentChannel}
+                                        onSelect={setCurrentChannel}
+                                    />
+                                )}
+                            </div>
 
-                        <div className="chat-messages-content">
-                            {currentChannel ? (
-                                <>
-                                    <h2># {currentChannel.name}</h2>
-                                    <ChatMessages channelId={currentChannel.id} />
-                                    <ChatInput channelId={currentChannel.id} />
-                                </>
-                            ) : (
-                                <h2>Aucun canal sélectionné</h2>
-                            )}
-                        </div>
-                    </>
-                ) : (
-                    <div className="server-placeholder" />
+                            <div className="chat-messages-content">
+                                {currentChannel ? (
+                                    <>
+                                        <h2># {currentChannel.name}</h2>
+                                        <ChatMessages channelId={currentChannel.id} />
+                                        <ChatInput channelId={currentChannel.id} />
+                                    </>
+                                ) : (
+                                    <h2>Aucun canal sélectionné</h2>
+                                )}
+                            </div>
+                        </>
+                    ) : (
+                        <div className="server-placeholder" />
+                    )
                 )}
             </div>
         </div>

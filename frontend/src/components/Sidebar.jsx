@@ -1,17 +1,25 @@
 import React, { useEffect, useState } from "react";
 import "../assets/styles/Sidebar.css";
+import "../assets/styles/theme.css"
 import { useNavigate } from "react-router-dom";
 import { getAccessToken } from "../utils/GetAccesToken.js";
 import Logo from "../assets/Logo.png";
+import { FaGear } from "react-icons/fa6";
 
-export default function Sidebar({ userId, onSelectServer, setAddServerModalOpen }) {
+export default function Sidebar({
+                                    userId,
+                                    onSelectServer,
+                                    setAddServerModalOpen,
+                                    setSettingsModalOpen,
+                                    refreshServers
+                                }) {
     const [servers, setServers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [user, setUser] = useState(JSON.parse(localStorage.getItem("user"))?.user || null);
     const [selectedServer, setSelectedServer] = useState(null);
-    const navigate = useNavigate();
 
+    const navigate = useNavigate();
     const token = getAccessToken();
 
     useEffect(() => {
@@ -22,8 +30,11 @@ export default function Sidebar({ userId, onSelectServer, setAddServerModalOpen 
                 return;
             }
 
+            setLoading(true);
+            setError("");
+
             try {
-                const res = await fetch(`http://localhost:8000/api/user/${userId}/servers/`, {
+                const res = await fetch(`http://192.168.1.117:8000/api/user/${userId}/servers/`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                         "Content-Type": "application/json"
@@ -32,14 +43,20 @@ export default function Sidebar({ userId, onSelectServer, setAddServerModalOpen 
 
                 if (res.status === 401) {
                     setError("Access token expired or invalid. Please login again.");
-                    setLoading(false);
                     return;
                 }
 
-                if (!res.ok) throw new Error("Aucun serveur trouvé pour cet utilisateur");
+                if (!res.ok) {
+                    throw new Error("Aucun serveur trouvé pour cet utilisateur");
+                }
 
                 const data = await res.json();
                 setServers(data);
+
+                if (data.length > 0) {
+                    setSelectedServer(data[0]);
+                    onSelectServer?.(data[0]);
+                }
             } catch (err) {
                 setError(err.message);
             } finally {
@@ -47,27 +64,17 @@ export default function Sidebar({ userId, onSelectServer, setAddServerModalOpen 
             }
         };
 
-        if (userId) fetchServers();
-    }, [userId, token]);
-
-    useEffect(() => {
-        if (servers.length > 0) {
-            setSelectedServer(servers[0]);
-            onSelectServer?.(servers[0]);
+        if (userId) {
+            fetchServers();
         }
-    }, [servers]);
-
-    const handleLogout = () => {
-        localStorage.removeItem("user");
-        navigate("/login");
-    };
+    }, [userId, token, refreshServers]);
 
     useEffect(() => {
         if (!user?.id || !token) return;
 
         const fetchProfile = async () => {
             try {
-                const res = await fetch(`http://127.0.0.1:8000/api/user/profile/${user.id}`, {
+                const res = await fetch(`http://192.168.1.117:8000/api/user/profile/${user.id}`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     }
@@ -89,9 +96,15 @@ export default function Sidebar({ userId, onSelectServer, setAddServerModalOpen 
         fetchProfile();
     }, [user?.id, token]);
 
+    const handleLogout = () => {
+        localStorage.removeItem("user");
+        navigate("/login");
+    };
+
     return (
         <div className="sidebar">
             <img src={Logo} alt="Logo" className="sidebar-logo" />
+
             <button
                 className="button-add-server"
                 onClick={() => setAddServerModalOpen(true)}
@@ -124,9 +137,14 @@ export default function Sidebar({ userId, onSelectServer, setAddServerModalOpen 
                 <div className="sidebar-profile">
                     <div className="profile-avatar">
                         {user.avatar ? (
-                            <img src={`http://127.0.0.1:8000${user.avatar}`} alt={user.username.charAt(0).toUpperCase()} />
+                            <img
+                                src={`http://192.168.1.117:8000${user.avatar}`}
+                                alt={user.username.charAt(0).toUpperCase()}
+                            />
                         ) : (
-                            <div className="avatar-placeholder">{user.username.charAt(0).toUpperCase()}</div>
+                            <div className="avatar-placeholder">
+                                {user.username.charAt(0).toUpperCase()}
+                            </div>
                         )}
                     </div>
                     <div className="profile-info">
@@ -135,6 +153,7 @@ export default function Sidebar({ userId, onSelectServer, setAddServerModalOpen 
                             Déconnexion
                         </button>
                     </div>
+                    <div className="settings-icon" onClick={() => setSettingsModalOpen(true)}><FaGear/></div>
                 </div>
             )}
         </div>

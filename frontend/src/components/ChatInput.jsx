@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "../assets/styles/ChatInput.css";
+import "../assets/styles/theme.css"
 import {getAccessToken} from "../utils/GetAccesToken.js";
 
 const ChatInput = ({ channelId, onMessageSent }) => {
@@ -11,7 +12,7 @@ const ChatInput = ({ channelId, onMessageSent }) => {
         if (!input.trim()) return;
 
         try {
-            const response = await fetch("http://127.0.0.1:8000/api/message/create/", {
+            const response = await fetch("http://192.168.1.117:8000/api/message/create/", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import "../assets/styles/ChatMessages.css";
+import "../assets/styles/theme.css"
 import { getAccessToken } from "../utils/GetAccesToken.js";
 
 const ChatMessages = ({ channelId }) => {
@@ -16,7 +17,7 @@ const ChatMessages = ({ channelId }) => {
     const fetchMessages = async () => {
         if (!channelId || !token) return;
         try {
-            const res = await fetch(`http://localhost:8000/api/channel/${channelId}/messages/`, {
+            const res = await fetch(`http://192.168.1.117:8000/api/channel/${channelId}/messages/`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const text = await res.text();
@@ -36,7 +37,7 @@ const ChatMessages = ({ channelId }) => {
         if (!token) return null;
         if (profiles[userId]) return profiles[userId];
         try {
-            const res = await fetch(`http://127.0.0.1:8000/api/user/profile/${userId}`, {
+            const res = await fetch(`http://192.168.1.117:8000/api/user/profile/${userId}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const profile = await res.json();
@@ -50,7 +51,7 @@ const ChatMessages = ({ channelId }) => {
 
     useEffect(() => {
         fetchMessages();
-        const interval = setInterval(fetchMessages, 100);
+        const interval = setInterval(fetchMessages, 500);
         return () => clearInterval(interval);
     }, [channelId]);
 
@@ -80,7 +81,7 @@ const ChatMessages = ({ channelId }) => {
                         <span className="avatar">
                             {
 profile && profile.avatar ? (
-                                <img src={`http://127.0.0.1:8000${profile.avatar}`} alt="avatar" />
+                                <img src={`http://192.168.1.117:8000${profile.avatar}`} alt={profile.avatar.charAt(0).toUpperCase()} />
                             ) : (
                                 <div className="avatar-placeholder">{(profile?.username || "U").charAt(0).toUpperCase()}</div>
                             )

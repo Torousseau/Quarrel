@@ -91,10 +91,10 @@
     margin-top: auto;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     padding: 15px;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 12px;
-    gap: 10px;
     cursor: default;
 }
 
@@ -185,4 +185,15 @@
     transform: scale(0.98);
 }
 
+.settings-icon {
+    padding: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.settings-icon:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    cursor: pointer;
+}
 

@@ -13,7 +13,7 @@ export default function CreateServer() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const res = await fetch("http://127.0.0.1:8000/api/server/create/", {
+            const res = await fetch("http://192.168.1.117:8000/api/server/create/", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

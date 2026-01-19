@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+import uuid
 
 class UserProfile(models.Model):
     user = models.OneToOneField(
@@ -35,7 +36,17 @@ class Server(models.Model):
         related_name='owned_servers'
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    invite_code = models.CharField(
+            max_length=12,
+            unique=True,
+            editable=False
+
+        )
+
+    def save(self, *args, **kwargs):
+        if not self.invite_code:
+            self.invite_code = uuid.uuid4().hex[:12]
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
