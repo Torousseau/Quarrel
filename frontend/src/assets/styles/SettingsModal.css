@@ -1,6 +1,9 @@
 .modal-overlay {
     position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background: rgba(0, 0, 0, 0.6);
     z-index: 1000;
     display: flex;
@@ -25,7 +28,7 @@
     background: #23272a;
     border-top-left-radius: 8px;
     border-bottom-left-radius: 8px;
-    padding: 24px 0 24px 0;
+    padding: 24px 0;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -49,6 +52,7 @@
     cursor: pointer;
     transition: background 0.2s, color 0.2s;
 }
+
 .settings-tab.active,
 .settings-tab:hover {
     background: #36393f;
@@ -66,11 +70,13 @@
 .settings-field {
     margin-bottom: 24px;
 }
+
 .settings-field label {
     display: block;
     margin-bottom: 8px;
     color: #b9bbbe;
 }
+
 .settings-field input,
 .settings-field select {
     width: 100%;
@@ -80,6 +86,7 @@
     background: #23272a;
     color: #fff;
 }
+
 .settings-field input:focus,
 .settings-field select:focus {
     outline: none;
@@ -137,6 +144,7 @@
     font-weight: 500;
     transition: background 0.2s;
 }
+
 .edit-btn:hover {
     background: #4752c4;
 }
@@ -152,6 +160,7 @@
     transition: background 0.2s;
     margin-top: 12px;
 }
+
 .save-btn:hover {
     background: #5b6eae;
 }
@@ -167,6 +176,7 @@
     margin-top: 16px;
     transition: background 0.2s;
 }
+
 .logout-btn:hover {
     background: #a83232;
 }
@@ -182,6 +192,7 @@
     cursor: pointer;
     transition: color 0.2s;
 }
+
 .close-btn:hover {
     color: #fff;
 }

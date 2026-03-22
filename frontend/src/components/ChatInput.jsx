@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import "../assets/styles/ChatInput.css";
 import "../assets/styles/theme.css"
 import {getAccessToken} from "../utils/GetAccesToken.js";
+import apiLink from "../config/ApiLink.js";
+import { IoSend } from "react-icons/io5";
 
 const ChatInput = ({ channelId, onMessageSent }) => {
     const [input, setInput] = useState("");
@@ -12,7 +14,7 @@ const ChatInput = ({ channelId, onMessageSent }) => {
         if (!input.trim()) return;
 
         try {
-            const response = await fetch("http://192.168.1.117:8000/api/message/create/", {
+            const response = await fetch(`${apiLink}/api/message/create/`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -46,7 +48,7 @@ const ChatInput = ({ channelId, onMessageSent }) => {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
             />
-            <button type="submit">Send</button>
+            <button type="submit"><IoSend /></button>
         </form>
     );
 };

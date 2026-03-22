@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
 import "../assets/styles/Sidebar.css";
-import "../assets/styles/theme.css"
+import "../assets/styles/theme.css";
 import { useNavigate } from "react-router-dom";
 import { getAccessToken } from "../utils/GetAccesToken.js";
 import Logo from "../assets/Logo.png";
 import { FaGear } from "react-icons/fa6";
+import apiLink from "../config/ApiLink.js";
+
 
 export default function Sidebar({
-                                    userId,
+                                    user,
                                     onSelectServer,
                                     setAddServerModalOpen,
                                     setSettingsModalOpen,
@@ -16,7 +18,6 @@ export default function Sidebar({
     const [servers, setServers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
-    const [user, setUser] = useState(JSON.parse(localStorage.getItem("user"))?.user || null);
     const [selectedServer, setSelectedServer] = useState(null);
 
     const navigate = useNavigate();
@@ -34,7 +35,7 @@ export default function Sidebar({
             setError("");
 
             try {
-                const res = await fetch(`http://192.168.1.117:8000/api/user/${userId}/servers/`, {
+                const res = await fetch(`${apiLink}/api/user/${user.id}/servers/`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                         "Content-Type": "application/json"
@@ -64,37 +65,8 @@ export default function Sidebar({
             }
         };
 
-        if (userId) {
-            fetchServers();
-        }
-    }, [userId, token, refreshServers]);
-
-    useEffect(() => {
-        if (!user?.id || !token) return;
-
-        const fetchProfile = async () => {
-            try {
-                const res = await fetch(`http://192.168.1.117:8000/api/user/profile/${user.id}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    }
-                });
-
-                if (!res.ok) return;
-
-                const data = await res.json();
-                setUser((prev) => ({
-                    ...prev,
-                    avatar: data.avatar || prev.avatar,
-                    username: data.username || prev.username
-                }));
-            } catch (err) {
-                console.error("Erreur fetch user profile:", err);
-            }
-        };
-
-        fetchProfile();
-    }, [user?.id, token]);
+        if (user?.id) fetchServers();
+    }, [user, token, refreshServers]);
 
     const handleLogout = () => {
         localStorage.removeItem("user");
@@ -105,10 +77,7 @@ export default function Sidebar({
         <div className="sidebar">
             <img src={Logo} alt="Logo" className="sidebar-logo" />
 
-            <button
-                className="button-add-server"
-                onClick={() => setAddServerModalOpen(true)}
-            >
+            <button className="button-add-server" onClick={() => setAddServerModalOpen(true)}>
                 Ajouter un serveur
             </button>
 
@@ -138,7 +107,7 @@ export default function Sidebar({
                     <div className="profile-avatar">
                         {user.avatar ? (
                             <img
-                                src={`http://192.168.1.117:8000${user.avatar}`}
+                                src={user.avatar.startsWith("http") ? user.avatar : `${apiLink}${user.avatar}`}
                                 alt={user.username.charAt(0).toUpperCase()}
                             />
                         ) : (
@@ -148,12 +117,17 @@ export default function Sidebar({
                         )}
                     </div>
                     <div className="profile-info">
-                        <span className="profile-email">{user.username}</span>
+                        <span className="profile-email">
+                            <span className="profile-name">{user.username}</span>
+                            <span className="profile-tag">#{user.tag}</span>
+                        </span>
                         <button className="logout-button" onClick={handleLogout}>
                             Déconnexion
                         </button>
                     </div>
-                    <div className="settings-icon" onClick={() => setSettingsModalOpen(true)}><FaGear/></div>
+                    <div className="settings-icon" onClick={() => setSettingsModalOpen(true)}>
+                        <FaGear />
+                    </div>
                 </div>
             )}
         </div>

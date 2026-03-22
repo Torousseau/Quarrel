@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import "../assets/styles/AddServerModal.css";
 import "../assets/styles/theme.css"
 import { getAccessToken } from "../utils/GetAccesToken.js";
+import apiLink from "../config/ApiLink.js";
 
 export default function AddServerModal({ isOpen, onClose, onJoin, onCreate }) {
     const [inviteCode, setInviteCode] = useState("");
@@ -15,7 +16,7 @@ export default function AddServerModal({ isOpen, onClose, onJoin, onCreate }) {
         setLoading(true);
 
         try {
-            const res = await fetch("http://192.168.1.117:8000/api/server/join/", {
+            const res = await fetch(`${apiLink}/api/server/join/`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

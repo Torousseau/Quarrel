@@ -21,6 +21,8 @@ from API.views import (
     UpdateUserProfileView,
     JoinServerView,
     GetServersView,
+    GetMyProfileView,
+    SetTagView,
 )
 
 urlpatterns = [
@@ -30,6 +32,7 @@ urlpatterns = [
     path("api/register/", RegisterView.as_view(), name="register"),
     path("api/logout/", LogoutView.as_view(), name="logout"),
 
+    path('api/set_tag/<int:user_id>/', SetTagView.as_view(), name='set_user_tag'),
 
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
@@ -37,6 +40,7 @@ urlpatterns = [
     path("api/user/profile/<int:user_id>/", GetUserProfileView.as_view(), name="get_user_profile"),
     path("api/user/<int:user_id>/servers/", GetServersOfUserView.as_view(), name="get_servers_of_user"),
     path("api/user/profile/update/", UpdateUserProfileView.as_view(), name="update_user_profile"),
+    path("api/user/profile/me", GetMyProfileView.as_view(), name="get_own_profile"),
 
     path("api/server/create/", CreateServerView.as_view(), name="create_server"),
     path("api/server/<int:server_id>/channels/", GetChannelsOfServerView.as_view(), name="get_channels_of_server"),

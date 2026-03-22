@@ -5,11 +5,13 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
+from django.utils import timezone
 
 from API.models import UserProfile, ServerUser, Server, Channel
 from API.repositories.channel import ChannelRepository
 from API.repositories.message import MessageRepository
 from API.repositories.user import UserRepository
+from API.utils import generate_unique_tag
 
 
 class LoginView(APIView):
@@ -25,6 +27,9 @@ class LoginView(APIView):
             return Response({"error": "Invalid credentials"}, status=401)
         if not user.is_active:
             return Response({"error": "User is inactive"}, status=403)
+
+        user.last_login = timezone.now()
+        user.save(update_fields=['last_login'])
 
         refresh = RefreshToken.for_user(user)
         profile = getattr(user, 'profile', None)
@@ -78,10 +83,18 @@ class RegisterView(APIView):
         if UserRepository.get_user_by_email(email):
             return Response({"error": "Email already exists"}, status=400)
 
+        tag = generate_unique_tag()
+
         user = UserRepository.create_user(
             username=username,
             email=email,
             password=password
+        )
+
+        profile = UserProfile.objects.create(
+            user=user,
+            tag=tag,
+            bio=""
         )
 
         refresh = RefreshToken.for_user(user)
@@ -93,8 +106,9 @@ class RegisterView(APIView):
                 "id": user.id,
                 "username": user.username,
                 "email": user.email,
-                "bio": "",
-                "tag": ""
+                "bio": profile.bio,
+                "tag": profile.tag,
+                "avatar": profile.avatar.url if profile.avatar else None
             },
             "servers": []
         }, status=200)
@@ -118,22 +132,51 @@ class GetUserProfileView(APIView):
             "avatar": profile.avatar.url if profile and profile.avatar else None
         })
 
-
 class UpdateUserProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
     def put(self, request):
-        profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        user = request.user
+        profile, _ = UserProfile.objects.get_or_create(user=user)
 
-        profile.bio = request.data.get('bio', profile.bio)
-        profile.tag = request.data.get('tag', profile.tag)
+        if 'tag' in request.data:
+            return Response(
+                {"error": "Tag cannot be updated"},
+                status=400
+            )
+
+        if 'username' in request.data:
+            if User.objects.exclude(id=user.id).filter(username=request.data['username']).exists():
+                return Response({"error": "Username already taken"}, status=400)
+            user.username = request.data['username']
+
+        if 'email' in request.data:
+            if User.objects.exclude(id=user.id).filter(email=request.data['email']).exists():
+                return Response({"error": "Email already taken"}, status=400)
+            user.email = request.data['email']
+
+        user.save()
+
+        if 'bio' in request.data:
+            profile.bio = request.data['bio']
 
         if 'avatar' in request.FILES:
             profile.avatar = request.FILES['avatar']
 
         profile.save()
 
-        return Response({"message": "Profile updated successfully"})
+        return Response({
+            "message": "Profile updated successfully",
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "bio": profile.bio,
+                "tag": profile.tag,
+                "avatar": profile.avatar.url if profile.avatar else None
+            }
+        }, status=200)
+
 
 
 class CreateServerView(APIView):
@@ -216,7 +259,7 @@ class GetServersView(APIView):
                 "id": su.server.id,
                 "name": su.server.name,
                 "description": su.server.description,
-                "invite_code": su.server.invite_code if su.server.owner == request.user else None
+                "invite_code": su.server.invite_code
             }
             for su in server_users
         ])
@@ -254,16 +297,18 @@ class CreateChannelView(APIView):
         except Server.DoesNotExist:
             return Response({"error": "Server not found"}, status=404)
 
-        if server.owner != request.user:
-            return Response({"error": "Permission denied"}, status=403)
-
         channel = Channel.objects.create(
             name=name,
             description=description,
             server=server
         )
 
-        return Response({"id": channel.id}, status=201)
+        return Response({
+            "id": channel.id,
+            "name": channel.name,
+            "description": channel.description,
+            "server_id": server.id
+        }, status=201)
 
 
 class GetChannelsOfServerView(APIView):
@@ -284,9 +329,6 @@ class DeleteChannelView(APIView):
         channel = ChannelRepository.get_channel_by_id(channel_id)
         if not channel:
             return Response({"error": "Channel not found"}, status=404)
-
-        if channel.server.owner != request.user:
-            return Response({"error": "Permission denied"}, status=403)
 
         channel.delete()
         return Response({"message": "Channel deleted"})
@@ -344,3 +386,44 @@ class DeleteMessageView(APIView):
 
         MessageRepository.delete_message(message_id)
         return Response({"message": "Message deleted"})
+
+class GetMyProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        profile = getattr(user, 'profile', None)
+        return Response({
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "bio": profile.bio if profile else "",
+            "tag": profile.tag if profile else "",
+            "avatar": profile.avatar.url if profile and profile.avatar else None
+        })
+
+class SetTagView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, user_id):
+        user = UserRepository.get_user_by_id(user_id)
+        if not user:
+            return Response({"error": "User not found"}, status=404)
+
+        new_tag = request.data.get('tag')
+        if not new_tag:
+            return Response({"error": "Tag is required"}, status=400)
+
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        profile.tag = new_tag
+        profile.save()
+
+        return Response({
+            "message": "Tag updated successfully",
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "tag": profile.tag
+            }
+        }, status=200)
+

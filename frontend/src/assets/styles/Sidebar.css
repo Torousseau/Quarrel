@@ -125,8 +125,8 @@
     color: white;
 }
 
-.profile-email {
-    font-weight: 500;
+.profile-name{
+    font-size: 1.2rem;
 }
 
 .logout-button {
@@ -195,5 +195,9 @@
     background: rgba(255, 255, 255, 0.1);
     border-radius: 8px;
     cursor: pointer;
+}
+
+.profile-tag {
+    font-size: 0.6rem;
 }
 

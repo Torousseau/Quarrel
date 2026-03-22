@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "../assets/styles/LoginPage.css";
 import { useNavigate } from "react-router-dom";
+import apiLink from "../config/ApiLink.js";
 
 export default function LoginPage({ onLogin }) {
     const [username, setUsername] = useState("");
@@ -16,7 +17,7 @@ export default function LoginPage({ onLogin }) {
         setLoading(true);
 
         try {
-            const res = await fetch("http://192.168.1.117:8000/api/register/", {
+            const res = await fetch(`${apiLink}/api/register/`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username, password, email }),

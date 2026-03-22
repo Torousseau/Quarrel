@@ -1,10 +1,12 @@
 import { useEffect, useState, createContext } from "react";
 import { getAccessToken } from "../utils/GetAccesToken.js";
+import apiLink from "../config/ApiLink.js";
 
 // Créer le contexte
+// eslint-disable-next-line react-refresh/only-export-components
 export const UserContext = createContext(null);
 
-export const UserProvider = ({ children, ip }) => {
+export const UserProvider = ({ children}) => {
     const storedUserId = localStorage.getItem("userId");
     const [userId] = useState(storedUserId ? parseInt(storedUserId) : null);
 
@@ -17,7 +19,7 @@ export const UserProvider = ({ children, ip }) => {
         setLoading(true);
         setError("");
         try {
-            const response = await fetch(`http://${ip}/api/user/profile/${userId}`, {
+            const response = await fetch(`${apiLink}/api/user/profile/${userId}`, {
                 headers: { Authorization: `Bearer ${getAccessToken()}` },
             });
             if (!response.ok) throw new Error("Failed to fetch user");

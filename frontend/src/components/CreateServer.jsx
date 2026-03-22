@@ -1,6 +1,7 @@
 import {useState} from "react";
 import { useNavigate } from "react-router-dom";
 import {getAccessToken} from "../utils/GetAccesToken.js";
+import apiLink from "../config/ApiLink.js";
 
 export default function CreateServer() {
 
@@ -13,7 +14,7 @@ export default function CreateServer() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const res = await fetch("http://192.168.1.117:8000/api/server/create/", {
+            const res = await fetch(`${apiLink}/api/server/create/`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

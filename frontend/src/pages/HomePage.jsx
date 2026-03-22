@@ -8,9 +8,11 @@ import ChatInput from "../components/ChatInput.jsx";
 import AddServerModal from "../components/AddServerModal.jsx";
 import SettingsModal from "../components/SettingsModal.jsx";
 import "../assets/styles/theme.css";
+import apiLink from "../config/ApiLink.js";
+import LoadingPage from "./LoadingPage.jsx";
 
 export default function HomePage() {
-    const user = JSON.parse(localStorage.getItem("user"))?.user;
+    const [user, setUser] = useState(JSON.parse(localStorage.getItem("user"))?.user);
 
     const [selectedServer, setSelectedServer] = useState(null);
     const [channels, setChannels] = useState([]);
@@ -40,17 +42,12 @@ export default function HomePage() {
             }
 
             try {
-                const url = `http://192.168.1.117:8000/api/server/${selectedServer.id}/channels/`;
-
+                const url = `${apiLink}/api/server/${selectedServer.id}/channels/`;
                 const res = await fetch(url, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
+                    headers: { Authorization: `Bearer ${token}` },
                 });
 
-                if (!res.ok) {
-                    throw new Error("Erreur lors du chargement des canaux");
-                }
+                if (!res.ok) throw new Error("Erreur lors du chargement des canaux");
 
                 const data = await res.json();
                 setChannels(data);
@@ -65,10 +62,26 @@ export default function HomePage() {
         fetchChannels();
     }, [selectedServer, addServerModalOpen, settingsModalOpen]);
 
+    const handleRefreshServers = () => setRefreshServers(prev => !prev);
+
+    const handleUpdateUser = (updatedUser) => {
+        const stored = JSON.parse(localStorage.getItem("user")) || {};
+        localStorage.setItem(
+            "user",
+            JSON.stringify({
+                ...stored,
+                user: updatedUser
+            })
+        );
+        setUser(updatedUser);
+        handleRefreshServers()
+    };
+
+
     return (
         <div className="home-container">
             <Sidebar
-                userId={user?.id}
+                user={user}
                 onSelectServer={setSelectedServer}
                 setAddServerModalOpen={setAddServerModalOpen}
                 setSettingsModalOpen={setSettingsModalOpen}
@@ -79,7 +92,7 @@ export default function HomePage() {
                 <AddServerModal
                     isOpen={true}
                     onClose={() => setAddServerModalOpen(false)}
-                    onJoin={() => setRefreshServers(prev => !prev)}
+                    onJoin={handleRefreshServers}
                 />
             )}
 
@@ -88,6 +101,7 @@ export default function HomePage() {
                     isOpen={true}
                     onClose={() => setSettingsModalOpen(false)}
                     user={user}
+                    onUserUpdate={handleUpdateUser}
                 />
             )}
 
@@ -96,7 +110,7 @@ export default function HomePage() {
                     selectedServer ? (
                         <>
                             <div className="channels-content">
-                                {loading && <p>Chargement...</p>}
+                                {loading && <LoadingPage />}
                                 {error && <p className="error">{error}</p>}
 
                                 {!loading && channels.length > 0 && (
@@ -115,9 +129,7 @@ export default function HomePage() {
                                         <ChatMessages channelId={currentChannel.id} />
                                         <ChatInput channelId={currentChannel.id} />
                                     </>
-                                ) : (
-                                    <h2>Aucun canal sélectionné</h2>
-                                )}
+                                ) : <></>}
                             </div>
                         </>
                     ) : (
